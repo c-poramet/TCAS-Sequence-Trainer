@@ -53,7 +53,23 @@ const PF_LABELS = ['n²', 'n³', '2n + 1', 'n² + n', '3n − 1', 'n² + 1', '2n
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1), n => n + 5, n => 2 * n + 1, n => 4 * n - 3, n => n * n - 1];
 const F_LABELS = ['n + 2', '2n', 'n²', '3n − 1', 'n² + n', 'n + 5', '2n + 1', '4n − 3', 'n² − 1'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const latex = x => String(x)
+const thaiText = x => String(x)
+  .replace(/the positive integers that are not multiples of 3, in increasing order/g, 'จำนวนเต็มบวกที่ไม่เป็นพหุคูณของ 3 เรียงจากน้อยไปมาก')
+  .replace(/the positive integers that are not multiples of 4, in increasing order/g, 'จำนวนเต็มบวกที่ไม่เป็นพหุคูณของ 4 เรียงจากน้อยไปมาก')
+  .replace(/the positive integers that are not multiples of 5, in increasing order/g, 'จำนวนเต็มบวกที่ไม่เป็นพหุคูณของ 5 เรียงจากน้อยไปมาก')
+  .replace(/the positive integers that are not perfect squares, in increasing order/g, 'จำนวนเต็มบวกที่ไม่เป็นกำลังสองสมบูรณ์ เรียงจากน้อยไปมาก')
+  .replace(/the composite numbers \(positive integers with more than two divisors\), in increasing order/g, 'จำนวนประกอบ (จำนวนเต็มบวกที่มีตัวหารมากกว่าสองตัว) เรียงจากน้อยไปมาก')
+  .replace(/the positive integers that are perfect squares or perfect cubes, in increasing order/g, 'จำนวนเต็มบวกที่เป็นกำลังสองสมบูรณ์หรือกำลังสามสมบูรณ์ เรียงจากน้อยไปมาก')
+  .replace(/the positive integers that are neither multiples of 2 nor multiples of 3, in increasing order/g, 'จำนวนเต็มบวกที่ไม่เป็นพหุคูณของ 2 และไม่เป็นพหุคูณของ 3 เรียงจากน้อยไปมาก')
+  .replace(/the number of positive divisors of/g, 'จำนวนตัวหารบวกของ')
+  .replace(/the sum of the positive divisors of/g, 'ผลรวมตัวหารบวกของ')
+  .replace(/and so on/g, 'ต่อเนื่องไปเรื่อย ๆ')
+  .replace(/value at position n/g, 'ค่าที่ตำแหน่ง n')
+  .replace(/Sequence rule/g, 'กฎของลำดับ');
+const latex = x => (db.settings.language === 'th' ? thaiText(x) : String(x))
+  .replace(/\\text\{\s*even\s*\}/g, db.settings.language === 'th' ? '\\text{คู่}' : '\\text{even}')
+  .replace(/\\text\{\s*odd\s*\}/g, db.settings.language === 'th' ? '\\text{คี่}' : '\\text{odd}')
+  .replace(/\\text\{\s*is the\s*\}k\\text\{-th prime\}/g, db.settings.language === 'th' ? '\\text{คือจำนวนเฉพาะลำดับที่ }k' : '\\text{is the }k\\text{-th prime}')
   .replace(/×/g, '\\times ')
   .replace(/÷/g, '\\div ')
   .replace(/−/g, '-')
@@ -104,8 +120,9 @@ const polynomialForms = (constant, slope, power, offset = 0) => {
   return `${expanded} = (n ${signed(vertexOffset)})^2${offset ? ` ${signed(offset)}` : ''}`;
 };
 const formulaMarkup = x => {
-  const parts = String(x).split(';').map(part => part.trim()).filter(Boolean);
-  if (!/[=^()]/.test(String(x))) return `<span class="rule-prose">${esc(x)}</span>`;
+  const source = db.settings.language === 'th' ? thaiText(x) : String(x);
+  const parts = source.split(';').map(part => part.trim()).filter(Boolean);
+  if (!/[=^()]/.test(source)) return `<span class="rule-prose">${esc(source)}</span>`;
   return `<span class="formula-stack">${parts.map(part => `<span class="formula-row">\\(${latex(part)}\\)</span>`).join('')}</span>`;
 };
 const familyFormula = (family, t) => {
@@ -289,43 +306,72 @@ function exportPracticePdf() {
       const includeSolutions = $('#pdfSolutions').checked, includeHints = $('#pdfHints').checked;
     const questionBlocks = questions.map((q, index) => {
       const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
-      const hint = includeHints && q.explanation?.formula ? `<p class="pdf-hint"><b>Hint:</b> ${formulaMarkup(q.explanation.formula)}</p>` : '';
-        const topic = includeHints ? `<p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p>` : '';
+      const hint = includeHints && q.explanation?.formula ? `<p class="pdf-hint"><b>${db.settings.language === 'th' ? 'คำใบ้' : 'Hint'}:</b> ${formulaMarkup(q.explanation.formula)}</p>` : '';
+        const topic = includeHints ? `<p class="topic">${esc(topicLabel(q.topic))} · ${esc(familyLabel(q.family || 'sequence'))}</p>` : '';
         return `<article class="pdf-question"><h2>Question ${index + 1}</h2>${topic}<p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div>${hint}</article>`;
       }).join('');
-      const solutionBlocks = questions.map((q, index) => `<article class="pdf-solution"><h2>Question ${index + 1} solution</h2>${includeHints ? `<p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p>` : ''}${q.fullSeq ? `<div class="pdf-sequence">${q.fullSeq.map((value, position) => `<span class="${position === q.position ? 'missing' : ''}"><b>P${position + 1}</b>${value}</span>`).join('')}</div><div class="pdf-formula">${formulaMarkup(q.explanation?.formula || 'Sequence rule')}</div><ol>${(q.explanation?.steps || []).map(step => `<li>\\(${latex(step)}\\)</li>`).join('')}</ol><p class="pdf-answer">Correct answer: <strong>${esc(q.correct || q.choices?.[q.answer] || '')}</strong></p>` : `<p>${esc(q.q)}</p>`}</article>`).join('');
+      const solutionBlocks = questions.map((q, index) => `<article class="pdf-solution"><h2>${db.settings.language === 'th' ? 'ข้อ' : 'Question'} ${index + 1} ${db.settings.language === 'th' ? 'เฉลย' : 'solution'}</h2>${includeHints ? `<p class="topic">${esc(topicLabel(q.topic))} · ${esc(familyLabel(q.family || 'sequence'))}</p>` : ''}${q.fullSeq ? `<div class="pdf-sequence">${q.fullSeq.map((value, position) => `<span class="${position === q.position ? 'missing' : ''}"><b>P${position + 1}</b>${value}</span>`).join('')}</div><div class="pdf-formula">${formulaMarkup(q.explanation?.formula || 'Sequence rule')}</div><ol>${(q.explanation?.steps || []).map(step => `<li>\\(${latex(step)}\\)</li>`).join('')}</ol><p class="pdf-answer">${db.settings.language === 'th' ? 'คำตอบที่ถูกต้อง' : 'Correct answer'}: <strong>${esc(q.correct || q.choices?.[q.answer] || '')}</strong></p>` : `<p>${esc(q.q)}</p>`}</article>`).join('');
     const printWindow = window.open('', '_blank');
     if (!printWindow) { alert('Please allow pop-ups to generate the PDF.'); return; }
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(String(seed))}`;
-    const solutionSection = includeSolutions ? `<section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section>` : '';
-    const enabledTopics = enabled().map(id => TOPICS[id]?.label || id).join(', ');
+    const solutionSection = includeSolutions ? `<section class="solutions"><h1>${db.settings.language === 'th' ? 'เฉลย' : 'Solutions'}</h1><p class="meta">${db.settings.language === 'th' ? 'ใช้การแทนค่าตามตำแหน่งเพื่อตรวจคำตอบ' : 'Use the positional substitutions to check each answer.'}</p>${solutionBlocks}</section>` : '';
+    const enabledTopics = enabled().map(id => topicLabel(id)).join(', ');
     const configSummary = [
-      `Questions: ${count}`,
-      `Answer mode: ${db.settings.mode === 'type' ? 'Type answer' : 'Multiple choice'}`,
-      `Difficulty: ${db.settings.difficulty}`,
-      `Composition: ${db.settings.composition}`,
-      `Training: ${db.settings.training ? 'Weakness training' : 'Standard'}`,
-      `Tag: ${db.settings.tagFilter && db.settings.tagFilter !== 'all' ? db.settings.tagFilter : 'All functions'}`,
-      `Topics: ${enabledTopics || 'None'}`,
-      `Solutions: ${includeSolutions ? 'Included' : 'Hidden'}`,
-      `Hints: ${includeHints ? 'Included' : 'Hidden'}`
+      `${db.settings.language === 'th' ? 'จำนวนข้อ' : 'Questions'}: ${count}`,
+      `${db.settings.language === 'th' ? 'โหมดคำตอบ' : 'Answer mode'}: ${db.settings.mode === 'type' ? (db.settings.language === 'th' ? 'พิมพ์คำตอบ' : 'Type answer') : (db.settings.language === 'th' ? 'ปรนัย' : 'Multiple choice')}`,
+      `${db.settings.language === 'th' ? 'ระดับความยาก' : 'Difficulty'}: ${db.settings.language === 'th' ? ({ normal:'ปกติ', mixed:'ผสมรูปแบบตรรกะ', hard:'ยาก', expert:'ผู้เชี่ยวชาญ' }[db.settings.difficulty] || db.settings.difficulty) : db.settings.difficulty}`,
+      `${db.settings.language === 'th' ? 'การผสม' : 'Composition'}: ${db.settings.language === 'th' ? ({ light:'เบา', balanced:'สมดุล', composed:'ผสมมาก' }[db.settings.composition] || db.settings.composition) : db.settings.composition}`,
+      `${db.settings.language === 'th' ? 'การฝึก' : 'Training'}: ${db.settings.training ? (db.settings.language === 'th' ? 'จุดอ่อน' : 'Weakness training') : (db.settings.language === 'th' ? 'มาตรฐาน' : 'Standard')}`,
+      `${db.settings.language === 'th' ? 'แท็ก' : 'Tag'}: ${db.settings.tagFilter && db.settings.tagFilter !== 'all' ? db.settings.tagFilter : (db.settings.language === 'th' ? 'ทุกฟังก์ชัน' : 'All functions')}`,
+      `${db.settings.language === 'th' ? 'หัวข้อ' : 'Topics'}: ${enabledTopics || (db.settings.language === 'th' ? 'ไม่มี' : 'None')}`,
+      `${db.settings.language === 'th' ? 'เฉลย' : 'Solutions'}: ${includeSolutions ? (db.settings.language === 'th' ? 'รวม' : 'Included') : (db.settings.language === 'th' ? 'ซ่อน' : 'Hidden')}`,
+      `${db.settings.language === 'th' ? 'คำใบ้' : 'Hints'}: ${includeHints ? (db.settings.language === 'th' ? 'รวม' : 'Included') : (db.settings.language === 'th' ? 'ซ่อน' : 'Hidden')}`
     ].map(item => `<span>${esc(item)}</span>`).join('');
     printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>TCAS Sequence Trainer · Practice Sheet</title>
       <style>
         @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.seed{margin:8px 0 0;font:700 15px monospace;color:#145498}.seed-qr{width:90px;height:90px;image-rendering:auto}.pdf-config{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;margin:14px 0 18px;padding:9px 11px;border:1px solid #d5dce2;border-radius:6px;background:#f7f9fa;color:#4f5b64;font-size:10px}.pdf-config span{min-width:0}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.pdf-hint{padding:8px 10px;border-left:3px solid #c97f50;background:#fff7f1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
       </style><script>window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-      </head><body><header class="pdf-header"><div><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions</p><p class="seed">Seed: <strong>${seed}</strong></p></div><img class="seed-qr" src="${qrUrl}" alt="QR code for seed ${seed}"></header><div class="pdf-config">${configSummary}</div><main><section>${questionBlocks}</section>${solutionSection}</main><p class="footer">Generated from the trainer settings. Enter the seed in the trainer to reproduce this exact question set.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
+      </head><body><header class="pdf-header"><div><h1>${db.settings.language === 'th' ? 'เครื่องฝึกทำลำดับ TCAS' : 'TCAS Sequence Trainer'}</h1><p class="meta">${db.settings.language === 'th' ? 'แบบฝึกหัด · ' : 'Practice sheet · '}${count} ${db.settings.language === 'th' ? 'ข้อ' : 'questions'}</p><p class="seed">Seed: <strong>${seed}</strong></p></div><img class="seed-qr" src="${qrUrl}" alt="${db.settings.language === 'th' ? 'รหัส QR สำหรับ seed' : 'QR code for seed'} ${seed}"></header><div class="pdf-config">${configSummary}</div><main><section>${questionBlocks}</section>${solutionSection}</main><p class="footer">${db.settings.language === 'th' ? 'สร้างจากการตั้งค่าเครื่องมือ ป้อน seed ในโปรแกรมเพื่อสร้างชุดข้อสอบเดิมอีกครั้ง' : 'Generated from the trainer settings. Enter the seed in the trainer to reproduce this exact question set.'}</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
     printWindow.document.close();
 }
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
-let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', configOpen: true, off: [], statFilter: 'all', pdfSolutions: true, pdfHints: false } };
+let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', configOpen: true, off: [], statFilter: 'all', pdfSolutions: true, pdfHints: false, language: 'en' } };
 try { const x = JSON.parse(localStorage.getItem(KEY)); if (x) db = { ...db, ...x, settings: { ...db.settings, ...x.settings } }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
 
 /* ============ HELPERS ============ */
 const $ = s => document.querySelector(s);
+const LANG = {
+  en: { subtitle:'Entrance exam trainer', questions:'Questions', start:'Start · Space', exportPdf:'Export practice PDF', currentSeed:'Use current seed', includeSolutions:'Include solutions', includeHints:'Include hints for each question', seededSet:'Seeded set', startSeed:'Start seed', skipSolutions:'Skip to solutions', readQr:'Read QR code', seedHint:'Use the seed printed at the top of a practice PDF to reproduce its exact question set.', runHint:'Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.', problemConfig:'Problem configuration', answerMode:'Answer mode', difficulty:'Difficulty', composition:'Mixed logic composition', training:'Anki-style weakness training', practiceTag:'Practice tag', topics:'Topics', weakness:'Weakness analysis', records:'Records chart', improve:'What to improve', frequency:'Training frequency', recentRuns:'Recent runs', settings:'Settings', eraseData:'Erase all local data', footer:'Data is stored only in this browser (localStorage)', answerReview:'Answer review', selectSolution:'Select an answer card to inspect its solution.', accuracy:'Accuracy', average:'Avg / Q', bestStreak:'Best streak', solution:'Solution', correct:'Correct', incorrect:'Incorrect', seedSolution:'Seed solution', correctAnswer:'Correct answer', yourAnswer:'Your answer', saveFunction:'＋ Save function tag', finalTime:'Final time', solutionReveal:'Solution reveal', question:'Question' },
+  th: { subtitle:'แบบฝึกหัดเตรียมสอบเข้า', questions:'จำนวนข้อ', start:'เริ่มทำ · Space', exportPdf:'ส่งออกแบบฝึกหัด PDF', currentSeed:'ใช้ชุดจาก seed ปัจจุบัน', includeSolutions:'รวมเฉลย', includeHints:'รวมคำใบ้ในแต่ละข้อ', seededSet:'ชุดจาก seed', startSeed:'เริ่มจาก seed', skipSolutions:'ข้ามไปดูเฉลย', readQr:'อ่านรหัส QR', seedHint:'ใช้ seed ที่พิมพ์อยู่ด้านบนของ PDF เพื่อสร้างชุดข้อสอบเดิมอีกครั้ง', runHint:'ใช้เวลา + 2 วินาทีต่อข้อที่ผิด กด 1–5 เพื่อตอบ กด Esc เพื่อออก', problemConfig:'ตั้งค่าโจทย์', answerMode:'โหมดคำตอบ', difficulty:'ระดับความยาก', composition:'การผสมรูปแบบตรรกะ', training:'ฝึกจุดอ่อนแบบ Anki', practiceTag:'แท็กสำหรับฝึก', topics:'หัวข้อ', weakness:'วิเคราะห์จุดอ่อน', records:'กราฟสถิติ', improve:'สิ่งที่ควรปรับปรุง', frequency:'ความถี่การฝึก', recentRuns:'การทำล่าสุด', settings:'ตั้งค่า', eraseData:'ลบข้อมูลในเครื่องทั้งหมด', footer:'ข้อมูลจัดเก็บไว้ในเบราว์เซอร์นี้เท่านั้น', answerReview:'ตรวจคำตอบ', selectSolution:'เลือกการ์ดคำตอบเพื่อดูเฉลย', accuracy:'ความแม่นยำ', average:'เฉลี่ย / ข้อ', bestStreak:'สถิติทำถูกต่อเนื่อง', solution:'เฉลย', correct:'ถูกต้อง', incorrect:'ไม่ถูกต้อง', seedSolution:'เฉลยจาก seed', correctAnswer:'คำตอบที่ถูกต้อง', yourAnswer:'คำตอบของคุณ', saveFunction:'＋ บันทึกแท็กฟังก์ชัน', finalTime:'เวลาสุดท้าย', solutionReveal:'เปิดเผยเฉลย', question:'ข้อ' }
+};
+const topicTh = { basic:'ลำดับเลขคณิตและเรขาคณิต', diff:'ผลต่างที่เพิ่มขึ้น', rec:'การเวียนเกิดและการดำเนินการ', inter:'กฎสลับสองชุด', pow:'ยกกำลัง จำนวนเฉพาะ และ 1/n', num:'รูปแบบจำนวน', entangled:'ฟังก์ชันซ้อนและพันกัน' };
+const familyTh = { arith:'เลขคณิต', geom:'เรขาคณิต', geomDown:'เรขาคณิตลดลง', dArith:'ผลต่างเลขคณิต', dGeom:'ผลต่างเรขาคณิต', dPow:'ผลต่างกำลัง', fib:'ฟีโบนัชชี', altOp:'สลับการดำเนินการ', affine:'ฟังก์ชันแอฟฟีน', inter:'สลับสองกฎ', parity:'คู่คี่', poly:'พหุนาม', recip:'ส่วนกลับ', prime:'จำนวนเฉพาะ', sieve:'คัดกรองจำนวน', divisor:'ตัวหาร', entangled:'ฟังก์ชันพันกัน', nested:'ฟังก์ชันซ้อน', nestedPure:'ฟังก์ชันซ้อนสามชั้น', entProd:'ผลคูณฟังก์ชัน', entDiff:'ผลต่างฟังก์ชัน', entParity:'ฟังก์ชันคู่คี่' };
+const t = key => LANG[db.settings.language === 'th' ? 'th' : 'en'][key] || LANG.en[key] || key;
+const topicLabel = id => db.settings.language === 'th' ? (topicTh[id] || TOPICS[id]?.label || id) : (TOPICS[id]?.label || id);
+const familyLabel = family => db.settings.language === 'th' ? (familyTh[family] || family) : family;
+function applyLanguage() {
+  document.documentElement.lang = db.settings.language === 'th' ? 'th' : 'en';
+  document.querySelectorAll('[data-i]').forEach(node => { node.textContent = t(node.dataset.i); });
+  const th = db.settings.language === 'th';
+  $('#btnLang').textContent = th ? '🇬🇧 English' : '🇹🇭 ไทย';
+  $('#btnLang').title = th ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย';
+  $('#selMode').options[0].textContent = th ? 'ปรนัย (1–5)' : 'Multiple choice (1–5)';
+  $('#selMode').options[1].textContent = th ? 'พิมพ์คำตอบ' : 'Type answer';
+  $('#selDifficulty').options[0].textContent = th ? 'ปกติ · ฟังก์ชันมาตรฐาน' : 'Normal · standard functions';
+  $('#selDifficulty').options[1].textContent = th ? 'ผสมรูปแบบตรรกะ' : 'Mixed logic';
+  $('#selDifficulty').options[2].textContent = th ? 'ยาก · ฟังก์ชันพันกัน' : 'Hard · entangled functions';
+  $('#selDifficulty').options[3].textContent = th ? 'ผู้เชี่ยวชาญ · ฟังก์ชันซ้อน' : 'Expert · nested functions';
+  $('#selComposition').options[0].textContent = th ? 'เบา · กฎหลัก' : 'Light · core rules';
+  $('#selComposition').options[1].textContent = th ? 'สมดุล · ผสมเป็นบางครั้ง' : 'Balanced · occasional composition';
+  $('#selComposition').options[2].textContent = th ? 'ผสมมาก · รวมฟังก์ชันพันกัน' : 'Composed · include entangled';
+  $('#selStatFilter').options[0].textContent = th ? 'ทุกหัวข้อ' : 'All topics';
+  $('#selStatFilter').options[1].textContent = th ? 'ควรฝึกเพิ่ม' : 'Needs practice';
+  $('#selStatFilter').options[2].textContent = th ? 'หัวข้อที่ถนัด' : 'Strong topics';
+  renderTopics(); renderDash();
+}
 const fmt = ms => { const s = ms / 1000; return s >= 60 ? `${Math.floor(s / 60)}:${(s % 60).toFixed(2).padStart(5, '0')}` : s.toFixed(2); };
 const acc = t => t && t.n ? t.c / t.n : null;
 const enabled = () => Object.keys(TOPICS).filter(id => !db.settings.off.includes(id));
@@ -372,16 +418,16 @@ function renderDash() {
   const rows = Object.keys(TOPICS).filter(id => db.topics[id]?.n).map(id => ({ id, t: db.topics[id] }))
     .filter(r => filter === 'all' || (filter === 'weak' ? acc(r.t) < .8 : acc(r.t) >= .8))
     .sort((a, b) => acc(a.t) - acc(b.t));
-  $('#stats').innerHTML = rows.length ? `<div class="row head"><span>Topic</span><span class="m">Acc</span><span class="m">Avg s</span><span class="m">Qs</span></div>` +
-    rows.map((r, i) => `<div class="row ${i === 0 && acc(r.t) < .9 ? 'weak' : ''}"><span>${TOPICS[r.id].label}${i === 0 && acc(r.t) < .9 ? '<em class="tag">FOCUS</em>' : ''}</span><span class="m">${Math.round(acc(r.t) * 100)}%</span><span class="m">${(r.t.ms / r.t.n / 1000).toFixed(1)}</span><span class="m">${r.t.n}</span><div class="bar"><i style="width:${acc(r.t) * 100}%"></i></div></div>`).join('')
-    : '<p class="empty">Complete a run to see accuracy and speed per topic. Weak topics are served more often automatically.</p>';
-  $('#hist').innerHTML = db.sessions.length ? db.sessions.slice(-6).reverse().map(s => `<div class="row" style="grid-template-columns:1fr 80px 64px"><span>${new Date(s.d).toLocaleDateString()} · ${s.n}Q</span><span class="m">${fmt(s.final)}</span><span class="m">${Math.round(s.c / s.n * 100)}%</span></div>`).join('') : '<p class="empty">No runs yet.</p>';
+  $('#stats').innerHTML = rows.length ? `<div class="row head"><span>${db.settings.language === 'th' ? 'หัวข้อ' : 'Topic'}</span><span class="m">${db.settings.language === 'th' ? 'แม่นยำ' : 'Acc'}</span><span class="m">${db.settings.language === 'th' ? 'เฉลี่ย วินาที' : 'Avg s'}</span><span class="m">${db.settings.language === 'th' ? 'ข้อ' : 'Qs'}</span></div>` +
+    rows.map((r, i) => `<div class="row ${i === 0 && acc(r.t) < .9 ? 'weak' : ''}"><span>${topicLabel(r.id)}${i === 0 && acc(r.t) < .9 ? `<em class="tag">${db.settings.language === 'th' ? 'เน้น' : 'FOCUS'}</em>` : ''}</span><span class="m">${Math.round(acc(r.t) * 100)}%</span><span class="m">${(r.t.ms / r.t.n / 1000).toFixed(1)}</span><span class="m">${r.t.n}</span><div class="bar"><i style="width:${acc(r.t) * 100}%"></i></div></div>`).join('')
+    : `<p class="empty">${db.settings.language === 'th' ? 'ทำแบบฝึกหัดให้จบเพื่อดูความแม่นยำและความเร็วในแต่ละหัวข้อ ระบบจะนำหัวข้อที่ควรฝึกกลับมาให้บ่อยขึ้นโดยอัตโนมัติ' : 'Complete a run to see accuracy and speed per topic. Weak topics are served more often automatically.'}</p>`;
+  $('#hist').innerHTML = db.sessions.length ? db.sessions.slice(-6).reverse().map(s => `<div class="row" style="grid-template-columns:1fr 80px 64px"><span>${new Date(s.d).toLocaleDateString()} · ${s.n}${db.settings.language === 'th' ? ' ข้อ' : 'Q'}</span><span class="m">${fmt(s.final)}</span><span class="m">${Math.round(s.c / s.n * 100)}%</span></div>`).join('') : `<p class="empty">${db.settings.language === 'th' ? 'ยังไม่มีการทำแบบฝึกหัด' : 'No runs yet.'}</p>`;
   const chart = db.sessions.slice(-8);
   $('#chart').innerHTML = chart.length ? chart.map(s => `<div class="chart-col"><i style="height:${Math.max(8, s.c / s.n * 100)}%" title="${Math.round(s.c / s.n * 100)}% accuracy"></i><span>${Math.round(s.c / s.n * 100)}%</span></div>`).join('') : '<p class="empty">Complete runs to see your record chart.</p>';
   const weak = Object.entries(db.topics).filter(([, t]) => t.n && acc(t) < .8).sort((a, b) => acc(a[1]) - acc(b[1])).slice(0, 3);
-  $('#guide').innerHTML = weak.length ? `<p>Prioritize ${weak.map(([id]) => `<b>${TOPICS[id]?.label || id}</b>`).join(', ')}. Slow down on the first difference, then explain the rule aloud before choosing.</p>` : '<p>Keep mixing topics. Aim for 90% accuracy before pushing the difficulty higher.</p>';
+  $('#guide').innerHTML = weak.length ? `<p>${db.settings.language === 'th' ? 'ให้ความสำคัญกับ' : 'Prioritize'} ${weak.map(([id]) => `<b>${topicLabel(id)}</b>`).join(', ')}${db.settings.language === 'th' ? ' ลองชะลอการดูผลต่างพจน์แรก แล้วอธิบายกฎก่อนเลือกคำตอบ' : '. Slow down on the first difference, then explain the rule aloud before choosing.'}</p>` : `<p>${db.settings.language === 'th' ? 'ฝึกให้หลากหลายต่อไป ตั้งเป้าความแม่นยำ 90% ก่อนเพิ่มระดับความยาก' : 'Keep mixing topics. Aim for 90% accuracy before pushing the difficulty higher.'}</p>`;
   const frequency = Object.entries(db.topics).filter(([, t]) => t.n).sort((a, b) => b.n - a.n);
-  $('#frequency').innerHTML = frequency.length ? frequency.map(([id, t]) => `<div class="freq-row"><span>${TOPICS[id]?.label || id}</span><b>${t.n}</b><i style="width:${Math.min(100, t.n / Math.max(...frequency.map(([, x]) => x.n)) * 100)}%"></i><small>${t.due && t.due > Date.now() ? 'scheduled' : 'due now'}</small></div>`).join('') : '<p class="empty">Frequency appears after your first run.</p>';
+  $('#frequency').innerHTML = frequency.length ? frequency.map(([id, t]) => `<div class="freq-row"><span>${topicLabel(id)}</span><b>${t.n}</b><i style="width:${Math.min(100, t.n / Math.max(...frequency.map(([, x]) => x.n)) * 100)}%"></i><small>${t.due && t.due > Date.now() ? (db.settings.language === 'th' ? 'กำหนดแล้ว' : 'scheduled') : (db.settings.language === 'th' ? 'ถึงกำหนด' : 'due now')}</small></div>`).join('') : `<p class="empty">${db.settings.language === 'th' ? 'จะแสดงความถี่หลังทำแบบฝึกหัดครั้งแรก' : 'Frequency appears after your first run.'}</p>`;
   const tagSelect = $('#selTagFilter');
   if (tagSelect) {
     tagSelect.innerHTML = '<option value="all">All functions</option>' + Object.keys(db.tags || {}).sort().map(tag => `<option value="${esc(tag)}">${esc(tag)}</option>`).join('');
@@ -389,7 +435,7 @@ function renderDash() {
   }
 }
 function renderTopics() {
-  $('#topicList').innerHTML = Object.entries(TOPICS).map(([id, t]) => `<label class="topic"><input type="checkbox" data-id="${id}" ${db.settings.off.includes(id) ? '' : 'checked'}><span class="topic-icon">${t.icon || '•'}</span>${t.label}</label>`).join('');
+  $('#topicList').innerHTML = Object.entries(TOPICS).map(([id, topic]) => `<label class="topic"><input type="checkbox" data-id="${id}" ${db.settings.off.includes(id) ? '' : 'checked'}><span class="topic-icon">${topic.icon || '•'}</span>${topicLabel(id)}</label>`).join('');
   document.querySelectorAll('#topicList input').forEach(el => el.onchange = () => {
     const off = new Set(db.settings.off); el.checked ? off.delete(el.dataset.id) : off.add(el.dataset.id);
     db.settings.off = [...off]; $('#btnStart').disabled = !enabled().length; $('#btnPdf').disabled = !enabled().length; save();
@@ -407,7 +453,7 @@ function start(seedValue) {
   run = { n: db.settings.n, seed, rng: makeRng(seed), i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], seen: new Set(), q: null, locked: false, state: 'ready' };
   stage.classList.remove('solution-focus');
   document.body.classList.add('focus'); stage.hidden = false; closeSettings();
-  stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Seed <b>${run.seed}</b> · Esc to cancel</p>`;
+  stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">${db.settings.language === 'th' ? 'กด' : 'Press'} <b>SPACE</b> ${db.settings.language === 'th' ? 'เพื่อเริ่ม' : 'to begin'} · ${run.n} ${t('questions')} · Seed <b>${run.seed}</b> · ${db.settings.language === 'th' ? 'กด Esc เพื่อยกเลิก' : 'Esc to cancel'}</p>`;
 }
 function begin() { run.state = 'go'; run.t0 = performance.now(); tick(); next(); }
 function revealSeedSolutions(seedValue) {
@@ -465,11 +511,11 @@ function finish(preview = false) {
   const prev = db.sessions.filter(s => s.n === run.n), pb = !prev.length || final < Math.min(...prev.map(s => s.final));
   if (!preview) { db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, seed: run.seed, answers: run.answers }); save(); }
   const rows = Object.entries(run.by).map(([id, b]) => `<div class="row" style="grid-template-columns:1fr 60px 60px"><span>${TOPICS[id]?.label || id}</span><span class="m">${Math.round(b.c / b.n * 100)}%</span><span class="m">${(b.ms / b.n / 1000).toFixed(1)}s</span></div>`).join('');
-  const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok === true ? 'right' : a.ok === false ? 'wrong' : 'preview'}" data-review="${i}"><span class="card-number">${a.ok === true ? '✓' : a.ok === false ? '×' : '→'}</span><span><b>Q${i + 1} · ${a.ok === null ? 'Solution' : a.ok ? 'Correct' : 'Incorrect'}</b><small>${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
+  const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok === true ? 'right' : a.ok === false ? 'wrong' : 'preview'}" data-review="${i}"><span class="card-number">${a.ok === true ? '✓' : a.ok === false ? '×' : '→'}</span><span><b>${t('question')}${i + 1} · ${a.ok === null ? t('solution') : a.ok ? t('correct') : t('incorrect')}</b><small>${esc(topicLabel(a.topic))} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
   stage.innerHTML = `<div class="clock animate-in ${pb ? 'pb' : ''}">${fmt(final)}</div>
   <p class="meta">${preview ? 'Solution reveal' : pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · Seed <b>${run.seed}</b></p>
-  <div class="result-grid"><div><span>Accuracy</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>Avg / Q</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>Best streak</span><b>${run.best}</b></div></div>
-  <div style="width:min(600px,100%)">${rows}</div><section class="review-layout"><div class="review-list"><h3>Answer review</h3>${cards}</div><aside class="solution-pane" id="solutionPane"><div class="solution-empty">Select an answer card to inspect its solution.</div></aside></section>
+  <div class="result-grid"><div><span>${t('accuracy')}</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>${t('average')}</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>${t('bestStreak')}</span><b>${run.best}</b></div></div>
+  <div style="width:min(600px,100%)">${rows}</div><section class="review-layout"><div class="review-list"><h3>${t('answerReview')}</h3>${cards}</div><aside class="solution-pane" id="solutionPane"><div class="solution-empty">${t('selectSolution')}</div></aside></section>
   <div class="actions"><button class="btn-primary" id="again">Again</button><button class="btn-secondary" id="home">Home</button></div>`;
   const openSolution = index => {
     const a = run.answers[index], pane = $('#solutionPane');
@@ -477,11 +523,11 @@ function finish(preview = false) {
     stage.querySelectorAll('.review-card').forEach(item => item.classList.remove('selected'));
     stage.querySelector(`[data-review="${index}"]`).classList.add('selected');
     pane.classList.remove('solution-in'); void pane.offsetWidth; pane.classList.add('solution-in');
-    pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok === null ? 'Seed solution' : a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok === null ? '' : a.ok ? 'good' : 'bad'}">${a.ok === null ? '→' : a.ok ? '✓' : '×'}</span></div>
-      <p class="solution-topic">${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')}</p>
+    pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok === null ? t('seedSolution') : a.ok ? t('correct') : t('incorrect')}</span><h2>${t('question')} ${index + 1}</h2></div><span class="solution-status ${a.ok === null ? '' : a.ok ? 'good' : 'bad'}">${a.ok === null ? '→' : a.ok ? '✓' : '×'}</span></div>
+      <p class="solution-topic">${esc(topicLabel(a.topic))} · ${esc(a.family || 'sequence')}</p>
       ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">${formulaMarkup(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
-      <div class="answer-compare">${a.ok === null ? '' : `<span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span>`}<span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
-      <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
+      <div class="answer-compare">${a.ok === null ? '' : `<span>${t('yourAnswer')}<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span>`}<span>${t('correctAnswer')}<strong>${esc(a.correct)}</strong></span></div>
+      <button class="tag-action" data-tag-family="${esc(a.topic)}">${t('saveFunction')}</button>`;
     pane.querySelector('.tag-action').onclick = () => openTagDialog(a.family || a.topic, pane.querySelector('.tag-action'));
     if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise([pane]);
   };
@@ -517,6 +563,7 @@ function quit() { cancelAnimationFrame(raf); run = null; stage.classList.remove(
 /* ============ SETTINGS + INPUT ============ */
 const layout = $('#layout'), toggleSettings = () => layout.classList.toggle('settings-open'), closeSettings = () => layout.classList.remove('settings-open');
 $('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = () => start();
+$('#btnLang').onclick = () => { db.settings.language = db.settings.language === 'th' ? 'en' : 'th'; save(); applyLanguage(); };
 $('#btnSeedStart').onclick = () => {
   const seed = normalizeSeed($('#seedInput').value);
   if (!seed) { $('#seedInput').focus(); return; }
@@ -591,4 +638,4 @@ addEventListener('keydown', e => {
   else if (e.code === 'Space' && !e.target.matches('button,input')) { e.preventDefault(); start(); }
 });
 
-renderTopics(); renderDash();
+applyLanguage();

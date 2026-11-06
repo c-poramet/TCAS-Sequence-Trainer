@@ -24,6 +24,7 @@ button,select,input{font:inherit;color:inherit}
 .brand{font:700 var(--fs-md) var(--font-mono);letter-spacing:.14em}
 .ctx{color:var(--text-sec);font-size:var(--fs-sm)}
 .dev-link{margin-left:10px;padding:7px 10px;border:1px solid rgba(20,84,152,.55);border-radius:7px;color:#8ab9ed;text-decoration:none;font:700 10px var(--font-mono);letter-spacing:.1em}.dev-link:hover{background:rgba(20,84,152,.18)}
+.lang-toggle{padding:8px 11px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(20,84,152,.18);color:#e8f3ff;cursor:pointer;font:700 var(--fs-xs) var(--font-ui);white-space:nowrap}.lang-toggle:hover{border-color:rgba(255,255,255,.35);background:rgba(20,84,152,.3)}
 .rail{display:flex;gap:8px;margin-left:auto}
 .ind{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .ind span{font:700 10px var(--font-mono);color:var(--text-sec);letter-spacing:.1em}

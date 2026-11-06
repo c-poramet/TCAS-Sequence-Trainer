@@ -13,13 +13,14 @@
 </head>
 <body>
 <header class="header">
-  <b class="brand">TCAS SEQUENCE TRAINER</b><span class="ctx">Entrance exam trainer</span>
+  <b class="brand">TCAS SEQUENCE TRAINER</b><span class="ctx" data-i="subtitle">Entrance exam trainer</span>
   <div class="rail">
     <div class="ind"><span>PB</span><b id="pb">--</b></div>
     <div class="ind hide-m"><span>AO5</span><b id="ao5">--</b></div>
     <div class="ind hide-m"><span>RUNS</span><b id="runs">0</b></div>
   </div>
   <button class="icon-btn" id="btnSet" title="Settings (T)" aria-label="Settings">⚙</button>
+  <button class="lang-toggle" id="btnLang" type="button" title="เปลี่ยนเป็นภาษาไทย" aria-label="เปลี่ยนภาษา">🇹🇭 ไทย</button>
   <a class="dev-link" href="dev.html">DEV</a>
 </header>
 
@@ -29,64 +30,64 @@
       <div class="solver-layout">
         <section class="panel left-panel">
           <div class="quick-start">
-            <label class="lbl" for="selN">Questions</label>
+            <label class="lbl" for="selN" data-i="questions">Questions</label>
             <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
             <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
-            <button class="btn-primary mt" id="btnStart">Start · Space</button>
-            <button class="btn-secondary mt" id="btnPdf">Export practice PDF</button>
-            <label class="pdf-option"><input type="checkbox" id="pdfCurrentSeed"> Use current seed</label>
-            <label class="pdf-option"><input type="checkbox" id="pdfSolutions" checked> Include solutions</label>
-            <label class="pdf-option"><input type="checkbox" id="pdfHints"> Include hints for each question</label>
+            <button class="btn-primary mt" id="btnStart" data-i="start">Start · Space</button>
+            <button class="btn-secondary mt" id="btnPdf" data-i="exportPdf">Export practice PDF</button>
+            <label class="pdf-option"><input type="checkbox" id="pdfCurrentSeed"> <span data-i="currentSeed">Use current seed</span></label>
+            <label class="pdf-option"><input type="checkbox" id="pdfSolutions" checked> <span data-i="includeSolutions">Include solutions</span></label>
+            <label class="pdf-option"><input type="checkbox" id="pdfHints"> <span data-i="includeHints">Include hints for each question</span></label>
             <div class="seed-tools">
-              <label class="lbl mt" for="seedInput">Seeded set</label>
-              <div class="seed-entry"><input id="seedInput" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter seed number"><button class="btn-secondary" id="btnSeedStart" type="button">Start seed</button></div>
-              <button class="btn-secondary mt" id="btnSeedSolutions" type="button">Skip to solutions</button>
-              <label class="btn-secondary qr-upload" for="qrInput">Read QR code<input id="qrInput" type="file" accept="image/*" capture="environment" hidden></label>
-              <p class="hint">Use the seed printed at the top of a practice PDF to reproduce its exact question set.</p>
+              <label class="lbl mt" for="seedInput" data-i="seededSet">Seeded set</label>
+              <div class="seed-entry"><input id="seedInput" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter seed number"><button class="btn-secondary" id="btnSeedStart" type="button" data-i="startSeed">Start seed</button></div>
+              <button class="btn-secondary mt" id="btnSeedSolutions" type="button" data-i="skipSolutions">Skip to solutions</button>
+              <label class="btn-secondary qr-upload" for="qrInput">📷 <span data-i="readQr">Read QR code</span><input id="qrInput" type="file" accept="image/*" capture="environment" hidden></label>
+              <p class="hint" data-i="seedHint">Use the seed printed at the top of a practice PDF to reproduce its exact question set.</p>
             </div>
-            <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
+            <p class="hint" data-i="runHint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
           </div>
           <details class="problem-config" id="problemConfig" open>
-            <summary><span>Problem configuration</span><span class="config-chevron">⌄</span></summary>
+            <summary><span data-i="problemConfig">Problem configuration</span><span class="config-chevron">⌄</span></summary>
             <div class="config-body">
-          <label class="lbl mt" for="selMode">Answer mode</label>
+          <label class="lbl mt" for="selMode" data-i="answerMode">Answer mode</label>
           <div class="select-wrap"><select id="selMode"><option value="choice">Multiple choice (1–5)</option><option value="type">Type answer</option></select></div>
-          <label class="lbl mt" for="selDifficulty">Difficulty</label>
+          <label class="lbl mt" for="selDifficulty" data-i="difficulty">Difficulty</label>
           <div class="select-wrap"><select id="selDifficulty"><option value="normal">Normal · standard functions</option><option value="mixed">Mixed logic</option><option value="hard">Hard · entangled functions</option><option value="expert">Expert · nested functions</option></select></div>
-          <label class="lbl mt" for="selComposition">Mixed logic composition</label>
+          <label class="lbl mt" for="selComposition" data-i="composition">Mixed logic composition</label>
           <div class="select-wrap"><select id="selComposition"><option value="light">Light · core rules</option><option value="balanced">Balanced · occasional composition</option><option value="composed">Composed · include entangled</option></select></div>
-          <label class="training-toggle"><input type="checkbox" id="chkTraining"> Anki-style weakness training</label>
-          <label class="lbl mt" for="selTagFilter">Practice tag</label>
+          <label class="training-toggle"><input type="checkbox" id="chkTraining"> <span data-i="training">Anki-style weakness training</span></label>
+          <label class="lbl mt" for="selTagFilter" data-i="practiceTag">Practice tag</label>
           <div class="select-wrap"><select id="selTagFilter"><option value="all">All functions</option></select></div>
-          <div class="panel-title mt">Topics</div>
+          <div class="panel-title mt" data-i="topics">Topics</div>
           <div id="topicList"></div>
             </div>
           </details>
         </section>
         <section class="panel right-panel">
-          <div class="panel-title">Weakness analysis</div>
+          <div class="panel-title" data-i="weakness">Weakness analysis</div>
           <div class="select-wrap stat-filter"><select id="selStatFilter" aria-label="Filter stats"><option value="all">All topics</option><option value="weak">Needs practice</option><option value="strong">Strong topics</option></select></div>
           <div id="stats"></div>
-          <div class="panel-title mt">Records chart</div>
+          <div class="panel-title mt" data-i="records">Records chart</div>
           <div class="chart" id="chart"></div>
-          <div class="panel-title mt">What to improve</div>
+          <div class="panel-title mt" data-i="improve">What to improve</div>
           <div class="guide" id="guide"></div>
-          <div class="panel-title mt">Training frequency</div>
+          <div class="panel-title mt" data-i="frequency">Training frequency</div>
           <div id="frequency"></div>
-          <div class="panel-title mt">Recent runs</div>
+          <div class="panel-title mt" data-i="recentRuns">Recent runs</div>
           <div id="hist"></div>
         </section>
       </div>
     </div>
     <aside class="panel settings-side" aria-label="Settings">
-      <div class="panel-title">Settings <button class="icon-btn close" id="btnClose" aria-label="Close settings">✕</button></div>
+      <div class="panel-title"><span data-i="settings">Settings</span> <button class="icon-btn close" id="btnClose" aria-label="Close settings">✕</button></div>
       <label class="lbl" for="rngScale">Font size <span id="scaleVal">100%</span></label>
       <input type="range" id="rngScale" min="0.85" max="1.4" step="0.05" value="1">
-      <button class="btn-secondary mt" id="btnReset">Erase all local data</button>
+      <button class="btn-secondary mt" id="btnReset" data-i="eraseData">Erase all local data</button>
     </aside>
   </div>
 </main>
-<footer class="footer">Data is stored only in this browser (localStorage).</footer>
+<footer class="footer" data-i="footer">Data is stored only in this browser (localStorage).</footer>
 
 <div class="stage" id="stage" hidden></div>
 <div class="tag-dialog-backdrop" id="tagDialog" hidden>

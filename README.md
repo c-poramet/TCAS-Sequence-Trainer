@@ -46,6 +46,8 @@ After each run, the review uses a split layout:
 
 Use **Export practice PDF** from the trainer panel to create a printable worksheet using the current question count, difficulty, composition, tags, and enabled topics. Enable **Use current seed** to export the active/seeded run again; leave it off to create a fresh set. Each sheet includes a numeric seed and QR code at the top. Enter that seed in **Seeded set** (or upload the QR image) to run the same question set in the trainer and see the interactive end-of-run solutions. **Skip to solutions** opens that exact set directly without recording a scored run. The PDF controls can independently include full solutions and per-question hints. Questions appear first and the full positional solutions begin on a new page when included.
 
+Use the prominent **🇹🇭 ไทย** toggle in the header to switch the trainer interface, review screen, topic labels, and PDF configuration text to Thai. Mathematical formulas and sequence values remain unchanged.
+
 Incorrect answer cards are highlighted in red. The solution panel includes animated sequence values, styled mathematical expressions, intermediate values, and the complete derivation for composed functions.
 
 ## Function tags
