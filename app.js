@@ -15,24 +15,31 @@ const S = f => Array.from({ length: 6 }, (_, i) => f(i));
 const rec = (a, st) => { const t = [a]; for (let i = 0; i < 5; i++) t.push(st(t[i], i, t)); return t; };
 const PR = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61];
 const mk = () => {
-  const a = rnd(1, 12);
-  if (rnd(0, 1)) {
+  const a = rnd(1, 12), kind = pk(['arith', 'arith', 'geom', 'sq', 'cube']);
+  if (kind === 'arith') {
     const d = rnd(2, 9) * sg();
     const rule = k => a + d * (k - 1);
     rule.label = `f(k) = ${a} ${d < 0 ? '−' : '+'} ${Math.abs(d)}(k − 1)`;
     rule.at = k => `${a} ${d < 0 ? '−' : '+'} ${Math.abs(d)}(${k} − 1)`;
     return rule;
   }
-  const r = rnd(2, 3);
-  const rule = k => a * r ** (k - 1);
-  rule.label = `f(k) = ${a} × (${r})^{k − 1}`;
-  rule.at = k => `${a} × (${r})^(${k} − 1)`;
+  if (kind === 'geom') {
+    const r = rnd(2, 3);
+    const rule = k => a * r ** (k - 1);
+    rule.label = `f(k) = ${a} × (${r})^{k − 1}`;
+    rule.at = k => `${a} × (${r})^(${k} − 1)`;
+    return rule;
+  }
+  const c = rnd(-4, 6), e = kind === 'sq' ? 2 : 3;
+  const rule = k => k ** e + c;
+  rule.label = `f(k) = k^${e} ${c < 0 ? '−' : '+'} ${Math.abs(c)}`;
+  rule.at = k => `${k}^${e} ${c < 0 ? '−' : '+'} ${Math.abs(c)}`;
   return rule;
 };
-const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1];
-const PF_LABELS = ['n²', 'n³', '2n + 1', 'n² + n', '3n − 1'];
-const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
-const F_LABELS = ['n + 2', '2n', 'n²', '3n − 1', 'n² + n'];
+const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1, n => n * n + 1, n => 2 * n * n, n => n * (n - 1), n => 4 * n - 3, n => 2 ** n];
+const PF_LABELS = ['n²', 'n³', '2n + 1', 'n² + n', '3n − 1', 'n² + 1', '2n²', 'n² − n', '4n − 3', '2^n'];
+const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1), n => n + 5, n => 2 * n + 1, n => 4 * n - 3, n => n * n - 1];
+const F_LABELS = ['n + 2', '2n', 'n²', '3n − 1', 'n² + n', 'n + 5', '2n + 1', '4n − 3', 'n² − 1'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const latex = x => String(x)
   .replace(/×/g, '\\times ')
@@ -117,46 +124,113 @@ function explanation(family, t, custom) {
   const formula = custom?.formula || familyFormula(family, t);
   const steps = t.map((value, i) => {
     const n = i + 1;
-    if (custom?.steps?.[i]) return `n = ${n}: ${custom.steps[i]} = ${value}`;
+    if (custom?.steps?.[i]) return custom.steps[i];
     if (family === 'arith') return `n = ${n}: f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
     if (family === 'geom') return `n = ${n}: f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
     return `n = ${n}: f(${n}) = ${value}`;
   });
   return { formula, steps };
 }
+const sgn = v => v < 0 ? '−' : '+', ab = Math.abs, pv = x => x < 0 ? `(${x})` : `${x}`, co = c => ab(c) === 1 ? '' : ab(c);
+const TRI = m => m * (m + 1) / 2;
+const FIBS = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233];
+const FACT = [1, 1, 2, 6, 24, 120, 720, 5040, 40320];
+const polyAt = (cs, n) => { let s = ''; for (let d = cs.length - 1; d >= 0; d--) { const c = cs[d]; if (!c) continue; const m = ab(c), body = d === 0 ? `${m}` : `${m === 1 ? '' : m + ' × '}${n}${d > 1 ? '^' + d : ''}`; s += s ? ` ${sgn(c)} ${body}` : `${c < 0 ? '−' : ''}${body}`; } return s || '0'; };
+const PRIME_ROW = 'p_k \\text{ is the }k\\text{-th prime}';
+const FIGURATE = [
+  { s: v => `${v}(${v} + 1) ÷ 2`, f: m => m * (m + 1) / 2 },
+  { s: v => `${v}(3${v} − 1) ÷ 2`, f: m => m * (3 * m - 1) / 2 },
+  { s: v => `${v}(2${v} − 1)`, f: m => m * (2 * m - 1) },
+  { s: v => `${v}(${v} + 1)(${v} + 2) ÷ 6`, f: m => m * (m + 1) * (m + 2) / 6 }
+];
+const LISTS = (() => {
+  const upto = (n, fn) => Array.from({ length: n }, (_, i) => i + 1).filter(fn);
+  const isSq = x => Number.isInteger(Math.sqrt(x)), isCube = x => Number.isInteger(Math.round(Math.cbrt(x))) && Math.round(Math.cbrt(x)) ** 3 === x;
+  return {
+    div3: [upto(90, x => x % 3), 'the positive integers that are not multiples of 3, in increasing order'],
+    div4: [upto(90, x => x % 4), 'the positive integers that are not multiples of 4, in increasing order'],
+    div5: [upto(90, x => x % 5), 'the positive integers that are not multiples of 5, in increasing order'],
+    nonSq: [upto(90, x => !isSq(x)), 'the positive integers that are not perfect squares, in increasing order'],
+    composite: [upto(90, x => x > 3 && !PR.includes(x) && x < 62), 'the composite numbers (positive integers with more than two divisors), in increasing order'],
+    sqCube: [upto(450, x => isSq(x) || isCube(x)), 'the positive integers that are perfect squares or perfect cubes, in increasing order'],
+    odd3: [upto(90, x => x % 2 && x % 3), 'the positive integers that are neither multiples of 2 nor multiples of 3, in increasing order']
+  };
+})();
+const divisors = m => { const d = []; for (let i = 1; i <= m; i++) if (m % i === 0) d.push(i); return d; };
 const FAM = {
   arith: () => { const a = rnd(-20, 90), d = rnd(2, 15) * sg(); return S(i => a + d * i); },
   geom: () => { const a = rnd(1, 6) * sg(), r = pk([2, 3, 4, -2, -3]); return S(i => a * r ** i); },
   geomDown: () => { const r = rnd(2, 5), a = rnd(1, 5) * r ** 5; return S(i => a / r ** i); },
   dArith: () => { const a = rnd(-5, 30), d = rnd(1, 5), k = rnd(1, 4) * sg(), t = rec(a, (x, i) => x + d + k * i); t.explain = { formula: `f(1) = ${a}; ${polynomialWithPrefix('f(n) = f(n − 1)', [d - 2 * k, k])}`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) + ${d} ${k < 0 ? '−' : '+'} ${Math.abs(k)}(${i}) = ${t[i - 1]} ${d + k * (i - 1) < 0 ? '−' : '+'} ${Math.abs(d + k * (i - 1))} = ${value}` : `f(1) = ${a}`) }; return t; },
-  dGeom: () => { const a = rnd(1, 20), m = rnd(1, 3), b = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * m * b ** i); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} ${m} × ${b}^{n − 2}`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${m} × ${b}^{i - 1} = ${value}` : `f(1) = ${a}`) }; return t; },
+  dGeom: () => { const a = rnd(1, 20), m = rnd(1, 3), b = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * m * b ** i); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} ${m} × ${b}^{n − 2}`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${m} × ${b}^{${i - 1}} = ${value}` : `f(1) = ${a}`) }; return t; },
   dPow: () => { const a = rnd(1, 100), p = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * (i + 1) ** p); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} (n − 1)^${p}`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) ${s < 0 ? '−' : '+'} (${i})^${p} = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${i ** p} = ${value}` : `f(1) = ${a}`) }; return t; },
   fib: () => { const t = [rnd(-5, 6), rnd(1, 6) * sg()]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2]); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = f(n − 1) + f(n − 2)`, steps: t.map((value, i) => i < 2 ? `f(${i + 1}) = ${value}` : `f(${i + 1}) = f(${i}) + f(${i - 1}) = ${t[i - 1]} + ${t[i - 2]} = ${value}`) }; return t; },
-  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(), a = rnd(2, 9), t = rec(a, (x, i) => i % 2 ? x + q : x * p); t.explain = { formula: `f(1) = ${a}; f(n) = \\begin{cases}${p}f(n − 1), & n\\text{ odd}\\\\ f(n − 1) ${q < 0 ? '−' : '+'} ${Math.abs(q)}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${i % 2 ? `f(${i}) ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `f(${i}) × ${p}`} = ${i % 2 ? `${t[i - 1]} ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `${t[i - 1]} × ${p}`} = ${value}`) }; return t; },
+  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(), a = rnd(2, 9), t = rec(a, (x, i) => i % 2 ? x + q : x * p); t.explain = { formula: `f(1) = ${a}; f(n) = \\begin{cases}${p}f(n − 1), & n\\text{ even}\\\\ f(n − 1) ${q < 0 ? '−' : '+'} ${Math.abs(q)}, & n\\text{ odd}\\end{cases}`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${(i - 1) % 2 ? `${pv(t[i - 1])} ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `${pv(t[i - 1])} × ${pv(p)}`} = ${value}`) }; return t; },
   affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(), a = rnd(0, 5), t = rec(a, x => m * x + c); t.explain = { formula: `f(n) = ${m} × f(n − 1) + (${c})`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${m} × f(${i}) + (${c}) = ${m} × (${t[i - 1]}) + (${c}) = ${value}`) }; return t; },
-  mulAdd: () => { const s = sg(), a = rnd(2, 4), t = rec(a, (x, i) => (x + s) * (i + 1)); t.explain = { formula: `f(1) = ${a}; f(n) = (f(n − 1) ${s < 0 ? '−' : '+'} 1)n`, steps: t.map((value, i) => i ? `f(${i + 1}) = (f(${i}) ${s < 0 ? '−' : '+'} 1) × ${i + 1} = (${t[i - 1]} ${s < 0 ? '−' : '+'} 1) × ${i + 1} = ${value}` : `f(1) = ${a}`) }; return t; },
-  mulHalf: () => { const a = 4 * rnd(1, 3), t = rec(a, (x, i) => x * (i + 1) / 2); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) × n ÷ 2`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} × ${i + 1} ÷ 2 = ${value}` : `f(1) = ${a}`) }; return t; },
+  mulAdd: () => { const s = sg(), a = rnd(2, 4), t = rec(a, (x, i) => (x + s) * (i + 2)); t.explain = { formula: `f(1) = ${a}; f(n) = (f(n − 1) ${s < 0 ? '−' : '+'} 1)n`, steps: t.map((value, i) => i ? `f(${i + 1}) = (f(${i}) ${s < 0 ? '−' : '+'} 1) × ${i + 1} = (${t[i - 1]} ${s < 0 ? '−' : '+'} 1) × ${i + 1} = ${value}` : `f(1) = ${a}`) }; return t; },
+  mulHalf: () => { const a = 4 * rnd(1, 3), t = rec(a, (x, i) => x * (i + 2) / 2); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) × n ÷ 2`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} × ${i + 1} ÷ 2 = ${value}` : `f(1) = ${a}`) }; return t; },
   inter: () => { const f = mk(), g = mk(), t = S(i => (i % 2 ? g : f)((i >> 1) + 1)); t.explain = { formula: `f(2k − 1) = ${f.label.replace(/^f\(k\) = /, '')}; f(2k) = ${g.label.replace(/^f\(k\) = /, '')}`, steps: t.map((value, i) => { const n = i + 1, k = Math.ceil(n / 2), rule = i % 2 ? g : f; return `f(${n}) = ${rule.at(k)} = ${value}`; }) }; return t; },
-  parity: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f, g] = [PF[ix[0]], PF[ix[1]]], t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: `f(n) = \\begin{cases}${PF_LABELS[ix[0]]}, & n\\text{ odd}\\\\ ${PF_LABELS[ix[1]]}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
+  parity: () => { const ix = shuffle(PF.map((_, k) => k)), [f, g] = [PF[ix[0]], PF[ix[1]]], t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: `f(n) = \\begin{cases}${PF_LABELS[ix[0]]}, & n\\text{ odd}\\\\ ${PF_LABELS[ix[1]]}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   sqPrev: () => { const a = rnd(2, 6), d = rnd(1, 3), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? t[i - 1] ** 2 : a + d * (i / 2)); t.explain = { formula: `f(2k − 1) = ${a} + ${d}(k − 1); f(2k) = f(2k − 1)^2`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, constant = r ? o + 6 : o - 1, slope = r ? -1 : 1, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = ${polynomialForms(constant, slope, p, c)}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
   pron: () => { const o = rnd(1, 5), t = S(i => (o + i) * (o + i + 1)); t.explain = { formula: `f(n) = ${polynomial([o * (o - 1), 2 * o - 1, 1])}`, steps: t.map((value, i) => `f(${i + 1}) = (${o + i})(${o + i + 1}) = ${value}`) }; return t; },
   recip: () => { const c = pk([60, 120, 180, 360, 720]), t = S(i => c / (i + 1)); t.explain = { formula: `f(n) = ${c} ÷ n`, steps: t.map((value, i) => `f(${i + 1}) = ${c} ÷ ${i + 1} = ${value}`) }; return t; },
   prime: () => { const s = rnd(0, 9), q = rnd(0, 1), t = S(i => PR[s + i] ** (q ? 2 : 1)); t.explain = { formula: q ? 'f(n) = p_n^2; p_n = \\text{the }n\\text{-th prime}' : 'f(n) = p_n; p_n = \\text{the }n\\text{-th prime}', steps: t.map((value, i) => `f(${i + 1}) = ${PR[s + i]}${q ? `^2 = ${value}` : ` = ${value}`}`) }; return t; }
-  ,entangled: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F_1(F_2(n)) + F_3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F_2(${n}) = ${inner}; F_1(${inner}) = ${outer}; F_3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
-  ,nested: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3, f4] = ix.slice(0, 4).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i))) + f4(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; F_4(n) = ${F_LABELS[ix[3]]}; therefore f(n) = F_1(F_2(F_3(n))) + F_4(n)`, steps: t.map((value, i) => { const n = a + i, inner = f3(n), middle = f2(inner), outer = f1(middle), extra = f4(n); return `n = ${n}: F_3(${n}) = ${inner}; F_2(${inner}) = ${middle}; F_1(${middle}) = ${outer}; F_4(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  ,entangled: () => { const ix = shuffle(F.map((_, k) => k)), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F_1(F_2(n)) + F_3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F_2(${n}) = ${inner}; F_1(${inner}) = ${outer}; F_3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  ,nested: () => { const ix = shuffle(F.map((_, k) => k)), [f1, f2, f3, f4] = ix.slice(0, 4).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i))) + f4(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; F_4(n) = ${F_LABELS[ix[3]]}; therefore f(n) = F_1(F_2(F_3(n))) + F_4(n)`, steps: t.map((value, i) => { const n = a + i, inner = f3(n), middle = f2(inner), outer = f1(middle), extra = f4(n); return `n = ${n}: F_3(${n}) = ${inner}; F_2(${inner}) = ${middle}; F_1(${middle}) = ${outer}; F_4(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  /* ---- growing differences ---- */
+  ,dTri: () => { const a = rnd(-5, 30), s = sg(), t = rec(a, (x, i) => x + s * TRI(i + 1)); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${sgn(s)} \\frac{(n − 1)n}{2}`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${sgn(s)} ${TRI(i)} = ${v}` : `f(1) = ${a}`) }; return t; }
+  ,dFib: () => { const a = rnd(-5, 30), s = sg(), t = rec(a, (x, i) => x + s * FIBS[i]); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${sgn(s)} F_{n − 1}; F_k \\text{ is the Fibonacci sequence } 1, 1, 2, 3, 5, \\ldots`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${sgn(s)} ${FIBS[i - 1]} = ${v}` : `f(1) = ${a}`) }; return t; }
+  ,dPrime: () => { const a = rnd(-5, 30), s = sg(), off = rnd(0, 1), t = rec(a, (x, i) => x + s * PR[off + i]); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${sgn(s)} p_{${off ? 'n' : 'n − 1'}}; ${PRIME_ROW}`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${sgn(s)} ${PR[off + i - 1]} = ${v}` : `f(1) = ${a}`) }; return t; }
+  ,dAlt: () => { const a = rnd(-5, 30), p = rnd(2, 9) * sg(); let q; do q = rnd(2, 9) * sg(); while (p + q === 0); const t = rec(a, (x, i) => x + (i % 2 ? q : p)); t.explain = { formula: `f(1) = ${a}; f(n) = \\begin{cases}f(n − 1) ${sgn(p)} ${ab(p)}, & n\\text{ even}\\\\\\\\ f(n − 1) ${sgn(q)} ${ab(q)}, & n\\text{ odd}\\end{cases}`, steps: t.map((v, j) => { if (!j) return `f(1) = ${a}`; const d = j % 2 ? p : q; return `f(${j + 1}) = ${t[j - 1]} ${sgn(d)} ${ab(d)} = ${v}`; }) }; return t; }
+  ,dPowOff: () => { const a = rnd(1, 60), p = pk([2, 3]), o = rnd(2, 4), s = sg(), t = rec(a, (x, i) => x + s * (o + i) ** p), sh = o - 2; t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${sgn(s)} (${sh ? 'n + ' + sh : 'n'})^${p}`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${sgn(s)} ${o + i - 1}^${p} = ${v}` : `f(1) = ${a}`) }; return t; }
+  /* ---- recurrence & operations ---- */
+  ,lin2: () => { const q = pk([1, 2, 3, -1]), p = q === -1 ? 3 : pk([1, 2, 3]), t = [rnd(1, 4), rnd(1, 5)]; while (t.length < 6) t.push(p * t[t.length - 1] + q * t[t.length - 2]); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = ${co(p)}f(n − 1) ${sgn(q)} ${co(q)}f(n − 2)`, steps: t.map((v, j) => j < 2 ? `f(${j + 1}) = ${v}` : `f(${j + 1}) = ${p} × ${pv(t[j - 1])} ${sgn(q)} ${ab(q)} × ${pv(t[j - 2])} = ${v}`) }; return t; }
+  ,fibOff: () => { const c = rnd(1, 5) * sg(), t = [rnd(1, 5), rnd(1, 6)]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2] + c); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = f(n − 1) + f(n − 2) ${sgn(c)} ${ab(c)}`, steps: t.map((v, j) => j < 2 ? `f(${j + 1}) = ${v}` : `f(${j + 1}) = ${pv(t[j - 1])} + ${pv(t[j - 2])} ${sgn(c)} ${ab(c)} = ${v}`) }; return t; }
+  ,tribo: () => { const t = [rnd(1, 3), rnd(1, 4), rnd(2, 5)]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2] + t[t.length - 3]); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}, f(3) = ${t[2]}; f(n) = f(n − 1) + f(n − 2) + f(n − 3)`, steps: t.map((v, j) => j < 3 ? `f(${j + 1}) = ${v}` : `f(${j + 1}) = ${t[j - 1]} + ${t[j - 2]} + ${t[j - 3]} = ${v}`) }; return t; }
+  ,recIdx: () => { const m = pk([2, 3, -2]), s = sg(), a = rnd(1, 4), t = rec(a, (x, i) => m * x + s * (i + 2)); t.explain = { formula: `f(1) = ${a}; f(n) = ${m}f(n − 1) ${sgn(s)} n`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${m} × ${pv(t[i - 1])} ${sgn(s)} ${i + 1} = ${v}` : `f(1) = ${a}`) }; return t; }
+  ,cycle3: () => { const p = pk([2, 3]), q = rnd(3, 9), r = rnd(1, 5), a = rnd(2, 7), t = rec(a, (x, i) => i % 3 === 0 ? x * p : i % 3 === 1 ? x + q : x - r); t.explain = { formula: `f(1) = ${a}; f(n) = \\begin{cases}${p}f(n − 1), & n \\equiv 2 \\pmod 3\\\\\\\\ f(n − 1) + ${q}, & n \\equiv 0 \\pmod 3\\\\\\\\ f(n − 1) − ${r}, & n \\equiv 1 \\pmod 3\\end{cases}`, steps: t.map((v, j) => { if (!j) return `f(1) = ${a}`; const k = (j - 1) % 3; return `f(${j + 1}) = ${k === 0 ? `${t[j - 1]} × ${p}` : k === 1 ? `${t[j - 1]} + ${q}` : `${t[j - 1]} − ${r}`} = ${v}`; }) }; return t; }
+  ,halfPlus: () => { const c = rnd(1, 6), k = rnd(1, 3) * sg(), a = 2 * c + 32 * k, t = rec(a, x => x / 2 + c); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ÷ 2 + ${c}`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} ÷ 2 + ${c} = ${v}` : `f(1) = ${a}`) }; return t; }
+  ,sumAll: () => { const t = [rnd(1, 4), rnd(1, 6)]; while (t.length < 6) t.push(t.reduce((x, y) => x + y, 0)); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = f(1) + f(2) + \\cdots + f(n − 1) \\quad (n \\ge 3)`, steps: t.map((v, j) => j < 2 ? `f(${j + 1}) = ${v}` : `f(${j + 1}) = ${t.slice(0, j).join(' + ')} = ${v}`) }; return t; }
+  /* ---- interleaved / alternating ---- */
+  ,derivedEven: () => { const a = rnd(2, 8), d = rnd(2, 6) * sg(), m = pk([2, 3]), c = rnd(1, 6) * sg(), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? m * t[i - 1] + c : a + d * (i / 2)); t.explain = { formula: `f(2k − 1) = ${a} ${sgn(d)} ${ab(d)}(k − 1); f(2k) = ${m}f(2k − 1) ${sgn(c)} ${ab(c)}`, steps: t.map((v, i) => i % 2 ? `f(${i + 1}) = ${m} × ${pv(t[i - 1])} ${sgn(c)} ${ab(c)} = ${v}` : `f(${i + 1}) = ${a} ${sgn(d)} ${ab(d)}(${i / 2}) = ${v}`) }; return t; }
+  ,altSign: () => { const sq = rnd(0, 1), s = sg(), a = rnd(2, 6), b = rnd(-3, 8), c = rnd(-4, 6), cs = sq ? [c, 0, 1] : [b, a], base = n => sq ? n * n + c : a * n + b, t = S(i => (i % 2 ? -s : s) * base(i + 1)); t.explain = { formula: `f(n) = (−1)^{${s > 0 ? 'n + 1' : 'n'}} (${polynomial(cs)})`, steps: t.map((v, i) => `f(${i + 1}) = (−1)^{${i + 1}${s > 0 ? ' + 1' : ''}} × (${polyAt(cs, i + 1)}) = ${v}`) }; return t; }
+  /* ---- powers, primes, 1/n ---- */
+  ,quad: () => { const a = rnd(1, 4), b = rnd(1, 6) * sg(), c = rnd(1, 8) * sg(), cs = [c, b, a], t = S(i => a * (i + 1) ** 2 + b * (i + 1) + c); t.explain = { formula: `f(n) = ${polynomial(cs)}`, steps: t.map((v, i) => `f(${i + 1}) = ${polyAt(cs, i + 1)} = ${v}`) }; return t; }
+  ,cubic: () => { const a = pk([1, 1, 2]), b = rnd(1, 5) * sg(), c = rnd(0, 6) * sg(), cs = [c, b, 0, a], t = S(i => a * (i + 1) ** 3 + b * (i + 1) + c); t.explain = { formula: `f(n) = ${polynomial(cs)}`, steps: t.map((v, i) => `f(${i + 1}) = ${polyAt(cs, i + 1)} = ${v}`) }; return t; }
+  ,figurate: () => { const K = pk(FIGURATE), o = rnd(0, 2), t = S(i => K.f(i + 1 + o)); t.explain = { formula: o ? `f(n) = g(n + ${o}); g(m) = ${K.s('m')}` : `f(n) = ${K.s('n')}`, steps: t.map((v, i) => `f(${i + 1}) = ${o ? `g(${i + 1 + o}) = ` : ''}${K.s(i + 1 + o)} = ${v}`) }; return t; }
+  ,cumPow: () => { const p = pk([2, 3]), s0 = pk([0, 0, 2, -2, 5]), t = rec(1 + s0, (x, i) => x + (i + 2) ** p); t.explain = { formula: `f(n) = \\sum_{k = 1}^{n} k^${p}${s0 ? ` ${sgn(s0)} ${ab(s0)}` : ''}`, steps: t.map((v, i) => i ? `f(${i + 1}) = ${t[i - 1]} + ${i + 1}^${p} = ${v}` : `f(1) = 1${s0 ? ` ${sgn(s0)} ${ab(s0)}` : ''} = ${v}`) }; return t; }
+  ,expLin: () => { const r = pk([2, 3, 4]), kind = pk(['n', 'n2', 'c']), b = rnd(1, 4) * sg(), c = rnd(1, 6) * sg(), s = sg(), add = n => kind === 'n' ? b * n : kind === 'n2' ? s * n * n : c, addStr = n => kind === 'n' ? `${sgn(b)} ${ab(b)} × ${n}` : kind === 'n2' ? `${sgn(s)} ${n}^2` : `${sgn(c)} ${ab(c)}`, t = S(i => r ** (i + 1) + add(i + 1)); t.explain = { formula: `f(n) = ${r}^n ${kind === 'n' ? `${sgn(b)} ${co(b)}n` : kind === 'n2' ? `${sgn(s)} n^2` : `${sgn(c)} ${ab(c)}`}`, steps: t.map((v, i) => `f(${i + 1}) = ${r}^${i + 1} ${addStr(i + 1)} = ${v}`) }; return t; }
+  ,fact: () => { const o = rnd(0, 1), kind = pk(['c', 'n']), c = rnd(1, 4) * sg(), s = sg(), add = n => kind === 'c' ? c : s * n, t = S(i => FACT[i + 1 + o] + add(i + 1)), fn = o ? '(n + 1)!' : 'n!'; t.explain = { formula: `f(n) = ${fn} ${kind === 'c' ? `${sgn(c)} ${ab(c)}` : `${sgn(s)} n`}`, steps: t.map((v, i) => `f(${i + 1}) = ${i + 1 + o}! ${kind === 'c' ? `${sgn(c)} ${ab(c)}` : `${sgn(s)} ${i + 1}`} = ${FACT[i + 1 + o]} ${kind === 'c' ? `${sgn(c)} ${ab(c)}` : `${sgn(s)} ${i + 1}`} = ${v}`) }; return t; }
+  ,recipShift: () => { const c = pk([840, 2520, 5040]), o = rnd(1, 2), t = S(i => c / (i + 1 + o)); t.explain = { formula: `f(n) = ${c} ÷ (n + ${o})`, steps: t.map((v, i) => `f(${i + 1}) = ${c} ÷ ${i + 1 + o} = ${v}`) }; return t; }
+  ,primeOp: () => { const a = pk([1, 2, 3]), b = a === 1 ? rnd(1, 5) * sg() : rnd(-4, 5), s = rnd(0, 5), t = S(i => a * PR[s + i] + b), tail = b ? ` ${sgn(b)} ${ab(b)}` : ''; t.explain = { formula: `f(n) = ${co(a)}p_{${s ? 'n + ' + s : 'n'}}${tail}; ${PRIME_ROW}`, steps: t.map((v, i) => `f(${i + 1}) = ${a === 1 ? '' : a + ' × '}${PR[s + i]}${tail} = ${v}`) }; return t; }
+  ,prodGap: () => { const g = pk([2, 3, 4]), o = rnd(0, 3), t = S(i => (i + 1 + o) * (i + 1 + o + g)); t.explain = { formula: o ? `f(n) = (n + ${o})(n + ${o + g})` : `f(n) = n(n + ${g})`, steps: t.map((v, i) => `f(${i + 1}) = ${i + 1 + o} × ${i + 1 + o + g} = ${v}`) }; return t; }
+  ,prodThree: () => { const o = rnd(0, 2), t = S(i => (i + 1 + o) * (i + 2 + o) * (i + 3 + o)); t.explain = { formula: o ? `f(n) = (n + ${o})(n + ${o + 1})(n + ${o + 2})` : 'f(n) = n(n + 1)(n + 2)', steps: t.map((v, i) => `f(${i + 1}) = ${i + 1 + o} × ${i + 2 + o} × ${i + 3 + o} = ${v}`) }; return t; }
+  /* ---- number patterns ---- */
+  ,primeSum: () => { const kind = pk(['+', '×']), s = rnd(0, 7), t = S(i => kind === '+' ? PR[s + i] + PR[s + i + 1] : PR[s + i] * PR[s + i + 1]); t.explain = { formula: `f(n) = p_{${s ? 'n + ' + s : 'n'}} ${kind} p_{n + ${s + 1}}; ${PRIME_ROW}`, steps: t.map((v, i) => `f(${i + 1}) = ${PR[s + i]} ${kind} ${PR[s + i + 1]} = ${v}`) }; return t; }
+  ,sieve: () => { const [list, text] = LISTS[pk(Object.keys(LISTS))], st = rnd(0, 4), t = list.slice(st, st + 6); t.explain = { formula: text, steps: t.map((v, i) => `f(${i + 1}) = ${v}`) }; return t; }
+  ,fibSq: () => { const o = rnd(0, 3), t = S(i => FIBS[o + i] ** 2); t.explain = { formula: `f(n) = F_{${o ? 'n + ' + o : 'n'}}^2; F_1 = F_2 = 1; F_k = F_{k − 1} + F_{k − 2}`, steps: t.map((v, i) => `f(${i + 1}) = ${FIBS[o + i]}^2 = ${v}`) }; return t; }
+  ,divisor: () => { const kind = pk(['count', 'sum']), s = rnd(1, 14), t = S(i => { const d = divisors(s + i); return kind === 'count' ? d.length : d.reduce((x, y) => x + y, 0); }); t.explain = { formula: kind === 'count' ? `the number of positive divisors of ${s}, ${s + 1}, ${s + 2}, and so on` : `the sum of the positive divisors of ${s}, ${s + 1}, ${s + 2}, and so on`, steps: t.map((v, i) => { const d = divisors(s + i); return `f(${i + 1}) = ${kind === 'count' ? d.length : d.join(' + ')} = ${v}`; }) }; return t; }
+  /* ---- entangled / nested composition ---- */
+  ,entProd: () => { const ix = shuffle(F.map((_, i) => i)), [f1, f2] = ix.slice(0, 2).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(a + i) * f2(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; therefore f(n) = F_1(n) × F_2(n)`, steps: t.map((v, i) => { const n = a + i; return `f(${i + 1}): n = ${n}; F_1(${n}) = ${f1(n)}; F_2(${n}) = ${f2(n)}; ${f1(n)} × ${f2(n)} = ${v}`; }) }; return t; }
+  ,entDiff: () => { const ix = shuffle(F.map((_, i) => i)), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) - f3(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F_1(F_2(n)) − F_3(n)`, steps: t.map((v, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `f(${i + 1}): n = ${n}; F_2(${n}) = ${inner}; F_1(${inner}) = ${outer}; F_3(${n}) = ${extra}; ${outer} − ${pv(extra)} = ${v}`; }) }; return t; }
+  ,nestedPure: () => { const ix = shuffle(F.map((_, i) => i)), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i)))); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F_1(F_2(F_3(n)))`, steps: t.map((v, i) => { const n = a + i, x = f3(n), y = f2(x); return `f(${i + 1}): n = ${n}; F_3(${n}) = ${x}; F_2(${x}) = ${y}; F_1(${y}) = ${v}`; }) }; return t; }
+  ,entParity: () => { const ix = shuffle(F.map((_, i) => i)), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), t = S(i => (i % 2 ? f3(i + 1) : f1(f2(i + 1)))); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; f(n) = \\begin{cases}F_1(F_2(n)), & n\\text{ odd}\\\\\\\\ F_3(n), & n\\text{ even}\\end{cases}`, steps: t.map((v, i) => { const n = i + 1; return i % 2 ? `f(${n}) = F_3(${n}) = ${v}` : `f(${n}) = F_1(F_2(${n})) = F_1(${f2(n)}) = ${v}`; }) }; return t; }
 };
 const GROUPS = {
   basic: ['Arithmetic & geometric', '＋', ['arith', 'geom', 'geomDown']],
-  diff: ['Growing differences', '↗', ['dArith', 'dGeom', 'dPow']],
-  rec: ['Recurrence & operations', '↻', ['fib', 'altOp', 'affine', 'mulAdd', 'mulHalf']],
-  inter: ['Two interleaved rules', '⇄', ['inter', 'parity', 'sqPrev']],
-  pow: ['Powers, primes, 1/n', '²', ['poly', 'pron', 'recip', 'prime']],
-  entangled: ['Entangled functions', '∑', ['entangled', 'nested']]
+  diff: ['Growing differences', '↗', ['dArith', 'dGeom', 'dPow', 'dTri', 'dFib', 'dPrime', 'dAlt', 'dPowOff']],
+  rec: ['Recurrence & operations', '↻', ['fib', 'altOp', 'affine', 'mulAdd', 'mulHalf', 'lin2', 'fibOff', 'tribo', 'recIdx', 'cycle3', 'halfPlus', 'sumAll']],
+  inter: ['Two interleaved rules', '⇄', ['inter', 'parity', 'sqPrev', 'derivedEven', 'altSign']],
+  pow: ['Powers, primes, 1/n', '²', ['poly', 'pron', 'recip', 'prime', 'quad', 'cubic', 'figurate', 'cumPow', 'expLin', 'fact', 'recipShift', 'primeOp', 'prodGap', 'prodThree']],
+  num: ['Number patterns', '#', ['primeSum', 'sieve', 'fibSq', 'divisor']],
+  entangled: ['Entangled functions', '∑', ['entangled', 'nested', 'entProd', 'entDiff', 'nestedPure', 'entParity']]
 };
 const valid = t => t.every(x => Number.isInteger(x) && Math.abs(x) < 1e5) && new Set(t).size > 3;
 function seqQ(id) {
-  const family = pk(GROUPS[id][2]); let t; do t = FAM[family](); while (!valid(t));
+  let pool = GROUPS[id][2];
+  if (id === 'entangled') { const d = db.settings.difficulty; if (d === 'hard') pool = ['entangled', 'entProd', 'entDiff']; else if (d === 'expert') pool = ['nested', 'nestedPure', 'entParity']; }
+  const family = pk(pool); let t; do t = FAM[family](); while (!valid(t));
   const h = rnd(0, 9) < 7 ? 5 : rnd(0, 4), ans = t[h], dl = Math.abs(t[2] - t[1]) || 3;
   const o = mcq(id, t.map((x, i) => i === h ? '?' : x).join(', '), ans, () => ans + pk([-1, 1, -2, 2, 10, -10, dl, -dl, dl + 1, -dl - 1, rnd(-9, 9)]));
   o.seq = t.map((x, i) => i === h ? null : x); o.fullSeq = t; o.position = h; o.family = family; o.explanation = explanation(family, t, t.explain); return o;

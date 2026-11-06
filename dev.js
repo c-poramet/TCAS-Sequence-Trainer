@@ -3,7 +3,7 @@ const KEY = 'sprint-exam-v1';
 const $ = s => document.querySelector(s);
 const esc = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const latex = x => String(x).replace(/×/g, '\\times ').replace(/÷/g, '\\div ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/²/g, '^2').replace(/³/g, '^3').replace(/\bn = /g, 'n\\,=\\,');
-const formulaMarkup = x => `<span class="formula-stack">${String(x).split(';').map(part => part.trim()).filter(Boolean).map(part => `<span class="formula-row">\\(${latex(part)}\\)</span>`).join('')}</span>`;
+const formulaMarkup = x => !/[=^()]/.test(String(x)) ? `<span class="rule-prose">${esc(x)}</span>` : `<span class="formula-stack">${String(x).split(';').map(part => part.trim()).filter(Boolean).map(part => `<span class="formula-row">\\(${latex(part)}\\)</span>`).join('')}</span>`;
 const families = [
   ['arith','Arithmetic progression','f(n) = 5n − 1','4, 9, 14, 19, 24, 29'],
   ['geom','Geometric progression','f(n) = 3 × 2^{n − 1}','3, 6, 12, 24, 48, 96'],
@@ -24,7 +24,39 @@ const families = [
   ['recip','Reciprocal','f(n) = constant ÷ n','60, 30, 20, 15, 12, 10'],
   ['prime','Prime powers','Prime sequence, optionally squared','2, 3, 5, 7, 11, 13'],
   ['entangled','Entangled composition','f(n) = F1(F2(n)) + F3(n)','11, 23, 39, 59, 83, 111'],
-  ['nested','Nested composition','f(n) = F1(F2(F3(n))) + F4(n)','9, 35, 101, 225, 429, 719']
+  ['nested','Nested composition','f(n) = F1(F2(F3(n))) + F4(n)','9, 35, 101, 225, 429, 719'],
+  ["dTri","Triangular differences","f(1) = 20; f(n) = f(n − 1) + \\frac{(n − 1)n}{2}","20, 21, 24, 30, 40, 55"],
+  ["dFib","Fibonacci differences","f(1) = 18; f(n) = f(n − 1) − F_{n − 1}; F_k \\text{ is the Fibonacci sequence } 1, 1, 2, 3, 5, \\ldots","18, 17, 16, 14, 11, 6"],
+  ["dPrime","Prime differences","f(1) = 11; f(n) = f(n − 1) + p_{n}; p_k \\text{ is the }k\\text{-th prime}","11, 14, 19, 26, 37, 50"],
+  ["dAlt","Alternating differences","f(1) = 5; f(n) = \\begin{cases}f(n − 1) + 6, & n\\text{ even}\\\\\\\\ f(n − 1) − 3, & n\\text{ odd}\\end{cases}","5, 11, 8, 14, 11, 17"],
+  ["dPowOff","Shifted power differences","f(1) = 57; f(n) = f(n − 1) + (n)^3","57, 65, 92, 156, 281, 497"],
+  ["lin2","Second-order linear recurrence","f(1) = 1, f(2) = 4; f(n) = 3f(n − 1) + 2f(n − 2)","1, 4, 14, 50, 178, 634"],
+  ["fibOff","Fibonacci with constant offset","f(1) = 4, f(2) = 6; f(n) = f(n − 1) + f(n − 2) + 1","4, 6, 11, 18, 30, 49"],
+  ["tribo","Tribonacci recurrence","f(1) = 3, f(2) = 2, f(3) = 2; f(n) = f(n − 1) + f(n − 2) + f(n − 3)","3, 2, 2, 7, 11, 20"],
+  ["recIdx","Recurrence with index term","f(1) = 1; f(n) = 3f(n − 1) + n","1, 5, 18, 58, 179, 543"],
+  ["cycle3","Three-step operation cycle","f(1) = 7; f(n) = \\begin{cases}2f(n − 1), & n \\equiv 2 \\pmod 3\\\\\\\\ f(n − 1) + 3, & n \\equiv 0 \\pmod 3\\\\\\\\ f(n − 1) − 3, & n \\equiv 1 \\pmod 3\\end{cases}","7, 14, 17, 14, 28, 31"],
+  ["halfPlus","Halve then add","f(1) = 102; f(n) = f(n − 1) ÷ 2 + 3","102, 54, 30, 18, 12, 9"],
+  ["sumAll","Sum of all previous terms","f(1) = 1, f(2) = 1; f(n) = f(1) + f(2) + \\cdots + f(n − 1) \\quad (n \\ge 3)","1, 1, 2, 4, 8, 16"],
+  ["derivedEven","Even terms derived from odd","f(2k − 1) = 5 − 2(k − 1); f(2k) = 3f(2k − 1) + 4","5, 19, 3, 13, 1, 7"],
+  ["altSign","Alternating sign","f(n) = (−1)^{n} (n^2 + 1)","-2, 5, -10, 17, -26, 37"],
+  ["quad","General quadratic","f(n) = 2n^2 + 2n + 7","11, 19, 31, 47, 67, 91"],
+  ["cubic","Cubic polynomial","f(n) = 2n^3 − 2n","0, 12, 48, 120, 240, 420"],
+  ["figurate","Figurate numbers","f(n) = n(n + 1)(n + 2) ÷ 6","1, 4, 10, 20, 35, 56"],
+  ["cumPow","Running sum of powers","f(n) = \\sum_{k = 1}^{n} k^3","1, 9, 36, 100, 225, 441"],
+  ["expLin","Exponential plus a term","f(n) = 2^n − 2n","0, 0, 2, 8, 22, 52"],
+  ["fact","Factorial plus a term","f(n) = (n + 1)! + 4","6, 10, 28, 124, 724, 5044"],
+  ["recipShift","Shifted reciprocal","f(n) = 5040 ÷ (n + 1)","2520, 1680, 1260, 1008, 840, 720"],
+  ["primeOp","Scaled primes","f(n) = 3p_{n + 5}; p_k \\text{ is the }k\\text{-th prime}","39, 51, 57, 69, 87, 93"],
+  ["prodGap","Product with a gap","f(n) = (n + 2)(n + 6)","21, 32, 45, 60, 77, 96"],
+  ["prodThree","Product of three consecutive","f(n) = (n + 2)(n + 3)(n + 4)","60, 120, 210, 336, 504, 720"],
+  ["primeSum","Prime sums and products","f(n) = p_{n + 5} × p_{n + 6}; p_k \\text{ is the }k\\text{-th prime}","221, 323, 437, 667, 899, 1147"],
+  ["sieve","Filtered integers","the positive integers that are not multiples of 5, in increasing order","6, 7, 8, 9, 11, 12"],
+  ["fibSq","Squared Fibonacci","f(n) = F_{n + 1}^2; F_1 = F_2 = 1; F_k = F_{k − 1} + F_{k − 2}","1, 4, 9, 25, 64, 169"],
+  ["divisor","Divisor counts and sums","the sum of the positive divisors of 13, 14, 15, and so on","14, 24, 24, 31, 18, 39"],
+  ["entProd","Entangled product","F_1(n) = n + 2; F_2(n) = n² − 1; f(n) = F_1(n) × F_2(n)","0, 12, 40, 90, 168, 280"],
+  ["entDiff","Entangled difference","F_1(n) = n + 2; F_2(n) = 2n + 1; F_3(n) = 3n − 1; f(n) = F_1(F_2(n)) − F_3(n)","0, -1, -2, -3, -4, -5"],
+  ["nestedPure","Pure nested chain","F_1(n) = 2n; F_2(n) = 3n − 1; F_3(n) = n² − 1; f(n) = F_1(F_2(F_3(n)))","16, 46, 88, 142, 208, 286"],
+  ["entParity","Entangled by parity","F_1(n) = 2n + 1; F_2(n) = 2n; F_3(n) = 3n − 1; f(n) = \\begin{cases}F_1(F_2(n)), & n\\text{ odd}\\\\\\\\ F_3(n), & n\\text{ even}\\end{cases}","5, 5, 13, 11, 21, 17"]
 ];
 const htmlExample = f => `<article class="function-card" data-family="${f[0]}"><div class="function-card-head"><span class="topic-icon">ƒ</span><div><h3>${esc(f[1])}</h3><span class="function-id">${f[0]}</span></div></div><div class="math-block">${formulaMarkup(f[2])}</div><p><b>Example:</b> ${esc(f[3])}</p><button class="btn-secondary try-family" data-family="${f[0]}">Try this family</button></article>`;
 function renderPreview(family) {
