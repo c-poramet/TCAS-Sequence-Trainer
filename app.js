@@ -19,7 +19,8 @@ const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * 
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
 const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,').replace(/\bf\(/g, 'f\\(');
+const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,');
+const formulaMarkup = x => /[=^()]/.test(String(x)) ? `\\(${latex(x)}\\)` : `<span class="rule-prose">${esc(x)}</span>`;
 const familyFormula = (family, t) => {
   const d = t[1] - t[0], r = t[0] ? t[1] / t[0] : 0;
   const formulas = {
@@ -63,7 +64,7 @@ const FAM = {
   dGeom: () => { const a = rnd(1, 20), m = rnd(1, 3), b = pk([2, 3]), s = sg(); return rec(a, (x, i) => x + s * m * b ** i); },
   dPow: () => { const a = rnd(1, 100), p = pk([2, 3]), s = sg(); return rec(a, (x, i) => x + s * (i + 1) ** p); },
   fib: () => { const t = [rnd(-5, 6), rnd(1, 6) * sg()]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2]); return t; },
-  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(); return rec(rnd(2, 9), (x, i) => i % 2 ? x + q : x * p); },
+  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(), a = rnd(2, 9), t = rec(a, (x, i) => i % 2 ? x + q : x * p); t.explain = { formula: `Odd steps: multiply by ${p}; even steps: ${q < 0 ? 'subtract' : 'add'} ${Math.abs(q)}`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${i % 2 ? `f(${i}) ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `f(${i}) × ${p}`} = ${i % 2 ? `${t[i - 1]} ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `${t[i - 1]} × ${p}`} = ${value}`) }; return t; },
   affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(), a = rnd(0, 5), t = rec(a, x => m * x + c); t.explain = { formula: `f(n) = ${m} × f(n − 1) + (${c})`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${m} × f(${i}) + (${c}) = ${m} × (${t[i - 1]}) + (${c}) = ${value}`) }; return t; },
   mulAdd: () => { const s = sg(); return rec(rnd(2, 4), (x, i) => (x + s) * (i + 1)); },
   mulHalf: () => rec(4 * rnd(1, 3), (x, i) => x * (i + 1) / 2),
@@ -245,7 +246,7 @@ function finish() {
     pane.classList.remove('solution-in'); void pane.offsetWidth; pane.classList.add('solution-in');
     pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok ? 'good' : 'bad'}">${a.ok ? '✓' : '×'}</span></div>
       <p class="solution-topic">${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')}</p>
-      ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">\\(${latex(a.explanation?.formula || 'Sequence rule')}\\)</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
+      ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">${formulaMarkup(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
       <div class="answer-compare"><span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span><span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
       <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
     pane.querySelector('.tag-action').onclick = () => {
