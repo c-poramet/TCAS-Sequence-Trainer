@@ -47,10 +47,12 @@ button,select,input{font:inherit;color:inherit}
 .select-wrap{position:relative}
 .select-wrap::after{content:'↓';position:absolute;top:50%;right:12px;color:var(--clr-green);pointer-events:none;transform:translateY(-52%)}
 select{width:100%;min-height:40px;padding:8px 34px 8px 11px;border:1px solid var(--border-md);border-radius:var(--radius-sm);appearance:none;background:var(--surface);font:var(--fs-sm) var(--font-mono)}
+.custom-count{width:100%;min-height:40px;margin-top:8px;padding:8px 11px;border:1px solid var(--border-md);border-radius:var(--radius-sm);background:var(--surface);font:var(--fs-sm) var(--font-mono)}
 select:focus,input:focus-visible,button:focus-visible{border-color:var(--clr-green);box-shadow:0 0 0 3px rgba(108,169,101,.18);outline:0}
 
 .topic{display:flex;align-items:center;gap:10px;min-height:36px;color:var(--text-pri);font-size:var(--fs-sm);cursor:pointer}
 .topic input{accent-color:var(--clr-green);width:16px;height:16px}
+.topic-icon{display:inline-grid;place-items:center;width:25px;height:25px;border:1px solid var(--border-md);border-radius:7px;color:var(--accent);font:700 var(--fs-sm) var(--font-mono)}
 
 .btn-primary{width:100%;min-height:44px;padding:13px;border:0;border-radius:var(--radius-sm);background:var(--text-pri);color:#111;cursor:pointer;font:700 var(--fs-md) var(--font-mono);letter-spacing:.08em;text-transform:uppercase;transition:opacity .12s,transform .08s}
 .btn-primary:hover{opacity:.88;transform:translateY(-1px)}
@@ -70,6 +72,12 @@ select:focus,input:focus-visible,button:focus-visible{border-color:var(--clr-gre
 .row.weak .bar i{background:var(--accent)}
 .tag{display:inline-block;margin-left:8px;padding:1px 6px;border:1px solid var(--accent);border-radius:4px;color:var(--accent);font:700 10px var(--font-mono)}
 .empty{color:var(--text-sec);font-size:var(--fs-sm);line-height:1.6}
+.stat-filter{margin:-4px 0 10px}
+.chart{height:150px;display:flex;align-items:end;gap:10px;padding:12px 8px 0;border-bottom:1px solid var(--border);background:linear-gradient(to top,rgba(108,169,101,.05),transparent)}
+.chart-col{height:100%;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:5px;color:var(--text-dim);font:10px var(--font-mono)}
+.chart-col i{display:block;width:100%;max-width:34px;min-height:8px;border-radius:5px 5px 0 0;background:var(--clr-green);opacity:.85}
+.guide{padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-sec);font-size:var(--fs-sm);line-height:1.6}
+.guide p{margin:0}.guide b{color:var(--text-pri)}
 
 /* settings push-in */
 .settings-side{flex:0 0 25%;min-width:300px;max-width:420px;max-height:calc(100vh - 112px);overflow-y:auto;overscroll-behavior:contain;transition:max-width .24s,min-width .24s,opacity .18s,transform .24s,padding .2s}
@@ -98,6 +106,17 @@ input[type=range]{width:100%;accent-color:var(--clr-green);min-height:34px}
 .result-grid b{font-size:calc(22px*var(--font-scale))}
 .pb{color:var(--clr-yellow)}
 .actions{display:flex;gap:10px;width:min(420px,100%)}
+.review-wrap{width:min(700px,100%);max-height:34vh;overflow:auto;text-align:left}
+.review-wrap h3{margin:0 0 10px;color:var(--text-sec);font:700 var(--fs-xs) var(--font-mono);letter-spacing:.1em;text-transform:uppercase}
+.review{margin:6px 0;border:1px solid var(--border-md);border-radius:var(--radius-sm);background:var(--surface);font-size:var(--fs-sm)}
+.review summary{padding:10px 12px;cursor:pointer;color:var(--text-sec)}.review summary b{color:var(--text-pri)}
+.review.wrong{border-color:rgba(201,127,80,.65)}.review.wrong summary{color:var(--accent)}
+.review>div{padding:0 12px 10px;color:var(--text-sec)}.review p{margin:8px 0}
+.review strong{color:var(--text-pri)}.position-note{color:var(--accent)!important;font:var(--fs-xs) var(--font-mono)}
+.review-seq{display:flex;gap:6px;flex-wrap:wrap}
+.review-seq span{position:relative;min-width:42px;padding:8px 5px 16px;border:1px solid var(--border-md);border-radius:6px;background:var(--card-dark);text-align:center;color:var(--text-pri);font:700 var(--fs-sm) var(--font-mono)}
+.review-seq span.position-gap{border-color:var(--accent);color:var(--accent)}
+.review-seq small{position:absolute;bottom:2px;left:0;right:0;color:var(--text-dim);font:9px var(--font-mono)}
 .animate-in{animation:fade-up .22s ease-out both}
 @keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 

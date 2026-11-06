@@ -26,17 +26,25 @@
         <section class="panel left-panel">
           <div class="panel-title">Session</div>
           <label class="lbl" for="selN">Questions</label>
-          <div class="select-wrap"><select id="selN"><option>10</option><option>20</option><option>30</option><option>50</option></select></div>
+          <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
+          <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
           <label class="lbl mt" for="selMode">Answer mode</label>
           <div class="select-wrap"><select id="selMode"><option value="choice">Multiple choice (1–5)</option><option value="type">Type answer</option></select></div>
+          <label class="lbl mt" for="selDifficulty">Difficulty</label>
+          <div class="select-wrap"><select id="selDifficulty"><option value="mixed">Mixed logic</option><option value="hard">Hard · entangled functions</option><option value="expert">Expert · nested functions</option></select></div>
           <div class="panel-title mt">Topics</div>
           <div id="topicList"></div>
           <button class="btn-primary mt" id="btnStart">Start · Space</button>
-          <p class="hint">Time + 2s per wrong answer. Keys 1–4 to answer. Esc quits.</p>
+          <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
         </section>
         <section class="panel right-panel">
           <div class="panel-title">Weakness analysis</div>
+          <div class="select-wrap stat-filter"><select id="selStatFilter" aria-label="Filter stats"><option value="all">All topics</option><option value="weak">Needs practice</option><option value="strong">Strong topics</option></select></div>
           <div id="stats"></div>
+          <div class="panel-title mt">Records chart</div>
+          <div class="chart" id="chart"></div>
+          <div class="panel-title mt">What to improve</div>
+          <div class="guide" id="guide"></div>
           <div class="panel-title mt">Recent runs</div>
           <div id="hist"></div>
         </section>
