@@ -265,37 +265,44 @@ function nextUniqueQuestion(seen) {
     // Keep the requested question count even when a narrow custom filter has a small pool.
     return q;
 }
+function seededQuestions(count, seed) {
+  const seen = new Set(), previousContext = generationContext;
+  generationContext = { recent: [] };
+  const questions = withRng(makeRng(seed), () => Array.from({ length: count }, () => {
+    const q = nextUniqueQuestion(seen);
+    generationContext.recent.push(q.family || q.topic);
+    if (generationContext.recent.length > 2) generationContext.recent.shift();
+    return q;
+  }));
+  generationContext = previousContext;
+  return questions;
+}
 function exportPracticePdf() {
       const count = Math.max(1, Math.floor(Number(db.settings.n) || 10));
       const seed = newSeed(), seen = new Set();
-      const previousContext = generationContext;
-      generationContext = { recent: [] };
-      const questions = withRng(makeRng(seed), () => Array.from({ length: count }, () => {
-        const q = nextUniqueQuestion(seen);
-        generationContext.recent.push(q.family || q.topic);
-        if (generationContext.recent.length > 2) generationContext.recent.shift();
-        return q;
-      }));
-      generationContext = previousContext;
+      const questions = seededQuestions(count, seed);
+      const includeSolutions = $('#pdfSolutions').checked, includeHints = $('#pdfHints').checked;
     const questionBlocks = questions.map((q, index) => {
       const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
-      return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div></article>`;
+      const hint = includeHints && q.explanation?.formula ? `<p class="pdf-hint"><b>Hint:</b> ${formulaMarkup(q.explanation.formula)}</p>` : '';
+      return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div>${hint}</article>`;
     }).join('');
     const solutionBlocks = questions.map((q, index) => `<article class="pdf-solution"><h2>Question ${index + 1} solution</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p>${q.fullSeq ? `<div class="pdf-sequence">${q.fullSeq.map((value, position) => `<span class="${position === q.position ? 'missing' : ''}"><b>P${position + 1}</b>${value}</span>`).join('')}</div><div class="pdf-formula">${formulaMarkup(q.explanation?.formula || 'Sequence rule')}</div><ol>${(q.explanation?.steps || []).map(step => `<li>\\(${latex(step)}\\)</li>`).join('')}</ol><p class="pdf-answer">Correct answer: <strong>${esc(q.correct || q.choices?.[q.answer] || '')}</strong></p>` : `<p>${esc(q.q)}</p>`}</article>`).join('');
     const printWindow = window.open('', '_blank');
     if (!printWindow) { alert('Please allow pop-ups to generate the PDF.'); return; }
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(String(seed))}`;
+    const solutionSection = includeSolutions ? `<section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section>` : '';
     printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>TCAS Sequence Trainer · Practice Sheet</title>
       <style>
-        @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.seed{margin:8px 0 0;font:700 15px monospace;color:#145498}.seed-qr{width:90px;height:90px;image-rendering:auto}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
+        @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.seed{margin:8px 0 0;font:700 15px monospace;color:#145498}.seed-qr{width:90px;height:90px;image-rendering:auto}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.pdf-hint{padding:8px 10px;border-left:3px solid #c97f50;background:#fff7f1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
       </style><script>window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-      </head><body><header class="pdf-header"><div><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions · ${esc(db.settings.difficulty)} difficulty · ${esc(db.settings.composition)} composition</p><p class="seed">Seed: <strong>${seed}</strong></p></div><img class="seed-qr" src="${qrUrl}" alt="QR code for seed ${seed}"></header><main><section>${questionBlocks}</section><section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section></main><p class="footer">Generated from the trainer settings. Enter the seed in the trainer to reproduce this exact question set.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
+      </head><body><header class="pdf-header"><div><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions · ${esc(db.settings.difficulty)} difficulty · ${esc(db.settings.composition)} composition</p><p class="seed">Seed: <strong>${seed}</strong></p></div><img class="seed-qr" src="${qrUrl}" alt="QR code for seed ${seed}"></header><main><section>${questionBlocks}</section>${solutionSection}</main><p class="footer">Generated from the trainer settings. Enter the seed in the trainer to reproduce this exact question set.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
     printWindow.document.close();
 }
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
-let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', configOpen: true, off: [], statFilter: 'all' } };
+let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', configOpen: true, off: [], statFilter: 'all', pdfSolutions: true, pdfHints: false } };
 try { const x = JSON.parse(localStorage.getItem(KEY)); if (x) db = { ...db, ...x, settings: { ...db.settings, ...x.settings } }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
 
@@ -385,6 +392,15 @@ function start(seedValue) {
   stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Seed <b>${run.seed}</b> · Esc to cancel</p>`;
 }
 function begin() { run.state = 'go'; run.t0 = performance.now(); tick(); next(); }
+function revealSeedSolutions(seedValue) {
+  if (!enabled().length) return;
+  const seed = normalizeSeed(seedValue);
+  if (!seed) { $('#seedInput').focus(); return; }
+  const questions = seededQuestions(Math.max(1, Math.floor(Number(db.settings.n) || 10)), seed);
+  run = { n: questions.length, seed, i: questions.length, c: 0, wrong: 0, streak: 0, best: 0, t0: performance.now(), qt: 0, by: {}, answers: questions.map(q => ({ q: q.q, seq: q.seq, fullSeq: q.fullSeq, position: q.position, topic: q.topic, family: q.family, explanation: q.explanation, chosen: '—', correct: q.choices?.[q.answer] || '', ok: null, time: 0 })), recent: [], seen: new Set(), q: null, locked: true, state: 'done', preview: true };
+  document.body.classList.add('focus'); stage.hidden = false; closeSettings();
+  finish(true);
+}
 function tick() { const c = $('#clock'); if (c) c.textContent = fmt(performance.now() - run.t0); raf = requestAnimationFrame(tick); }
 function next() {
   run.q = withRng(run.rng, () => nextUniqueQuestion(run.seen)); run.locked = false; run.qt = performance.now();
@@ -425,15 +441,15 @@ function submit(v) {
   run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, family: run.q.family, explanation: run.q.explanation, chosen: v, correct: right, ok });
   judge(ok, ok ? 220 : 1100);
 }
-function finish() {
+function finish(preview = false) {
   cancelAnimationFrame(raf);
   const total = performance.now() - run.t0, final = total + run.wrong * 2000;
   const prev = db.sessions.filter(s => s.n === run.n), pb = !prev.length || final < Math.min(...prev.map(s => s.final));
-  db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, seed: run.seed, answers: run.answers }); save();
+  if (!preview) { db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, seed: run.seed, answers: run.answers }); save(); }
   const rows = Object.entries(run.by).map(([id, b]) => `<div class="row" style="grid-template-columns:1fr 60px 60px"><span>${TOPICS[id]?.label || id}</span><span class="m">${Math.round(b.c / b.n * 100)}%</span><span class="m">${(b.ms / b.n / 1000).toFixed(1)}s</span></div>`).join('');
-  const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok ? 'right' : 'wrong'}" data-review="${i}"><span class="card-number">${a.ok ? '✓' : '×'}</span><span><b>Q${i + 1} · ${a.ok ? 'Correct' : 'Incorrect'}</b><small>${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
+  const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok === true ? 'right' : a.ok === false ? 'wrong' : 'preview'}" data-review="${i}"><span class="card-number">${a.ok === true ? '✓' : a.ok === false ? '×' : '→'}</span><span><b>Q${i + 1} · ${a.ok === null ? 'Solution' : a.ok ? 'Correct' : 'Incorrect'}</b><small>${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
   stage.innerHTML = `<div class="clock animate-in ${pb ? 'pb' : ''}">${fmt(final)}</div>
-  <p class="meta">${pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · ${fmt(total)} + ${run.wrong} × 2s · Seed <b>${run.seed}</b></p>
+  <p class="meta">${preview ? 'Solution reveal' : pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · Seed <b>${run.seed}</b></p>
   <div class="result-grid"><div><span>Accuracy</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>Avg / Q</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>Best streak</span><b>${run.best}</b></div></div>
   <div style="width:min(600px,100%)">${rows}</div><section class="review-layout"><div class="review-list"><h3>Answer review</h3>${cards}</div><aside class="solution-pane" id="solutionPane"><div class="solution-empty">Select an answer card to inspect its solution.</div></aside></section>
   <div class="actions"><button class="btn-primary" id="again">Again</button><button class="btn-secondary" id="home">Home</button></div>`;
@@ -443,10 +459,10 @@ function finish() {
     stage.querySelectorAll('.review-card').forEach(item => item.classList.remove('selected'));
     stage.querySelector(`[data-review="${index}"]`).classList.add('selected');
     pane.classList.remove('solution-in'); void pane.offsetWidth; pane.classList.add('solution-in');
-    pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok ? 'good' : 'bad'}">${a.ok ? '✓' : '×'}</span></div>
+    pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok === null ? 'Seed solution' : a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok === null ? '' : a.ok ? 'good' : 'bad'}">${a.ok === null ? '→' : a.ok ? '✓' : '×'}</span></div>
       <p class="solution-topic">${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')}</p>
       ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">${formulaMarkup(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
-      <div class="answer-compare"><span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span><span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
+      <div class="answer-compare">${a.ok === null ? '' : `<span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span>`}<span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
       <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
     pane.querySelector('.tag-action').onclick = () => openTagDialog(a.family || a.topic, pane.querySelector('.tag-action'));
     if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise([pane]);
@@ -488,6 +504,7 @@ $('#btnSeedStart').onclick = () => {
   if (!seed) { $('#seedInput').focus(); return; }
   start(seed);
 };
+$('#btnSeedSolutions').onclick = () => revealSeedSolutions(normalizeSeed($('#seedInput').value));
 $('#qrInput').onchange = async e => {
   const file = e.target.files?.[0]; e.target.value = '';
   if (!file) return;
@@ -504,6 +521,10 @@ $('#qrInput').onchange = async e => {
   }
 };
 $('#btnPdf').onclick = exportPracticePdf;
+$('#pdfSolutions').checked = db.settings.pdfSolutions !== false;
+$('#pdfHints').checked = !!db.settings.pdfHints;
+$('#pdfSolutions').onchange = e => { db.settings.pdfSolutions = e.target.checked; save(); };
+$('#pdfHints').onchange = e => { db.settings.pdfHints = e.target.checked; save(); };
 $('#selMode').value = db.settings.mode || 'choice'; $('#selMode').onchange = e => { db.settings.mode = e.target.value; save(); };
 $('#selDifficulty').value = db.settings.difficulty || 'mixed'; $('#selDifficulty').onchange = e => { db.settings.difficulty = e.target.value; save(); };
 $('#selComposition').value = db.settings.composition || 'balanced'; $('#selComposition').onchange = e => { db.settings.composition = e.target.value; save(); };
