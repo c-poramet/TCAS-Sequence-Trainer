@@ -14,7 +14,21 @@ const BANK = []; // fixed questions go here
 const S = f => Array.from({ length: 6 }, (_, i) => f(i));
 const rec = (a, st) => { const t = [a]; for (let i = 0; i < 5; i++) t.push(st(t[i], i, t)); return t; };
 const PR = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61];
-const mk = () => { const a = rnd(1, 12); if (rnd(0, 1)) { const d = rnd(2, 9) * sg(); return j => a + d * j; } const r = rnd(2, 3); return j => a * r ** j; };
+const mk = () => {
+  const a = rnd(1, 12);
+  if (rnd(0, 1)) {
+    const d = rnd(2, 9) * sg();
+    const rule = k => a + d * (k - 1);
+    rule.label = `f(k) = ${a} ${d < 0 ? '−' : '+'} ${Math.abs(d)}(k − 1)`;
+    rule.at = k => `${a} ${d < 0 ? '−' : '+'} ${Math.abs(d)}(${k} − 1)`;
+    return rule;
+  }
+  const r = rnd(2, 3);
+  const rule = k => a * r ** (k - 1);
+  rule.label = `f(k) = ${a} × (${r})^{k − 1}`;
+  rule.at = k => `${a} × (${r})^(${k} − 1)`;
+  return rule;
+};
 const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1];
 const PF_LABELS = ['n²', 'n³', '2n + 1', 'n² + n', '3n − 1'];
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
@@ -122,7 +136,7 @@ const FAM = {
   affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(), a = rnd(0, 5), t = rec(a, x => m * x + c); t.explain = { formula: `f(n) = ${m} × f(n − 1) + (${c})`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${m} × f(${i}) + (${c}) = ${m} × (${t[i - 1]}) + (${c}) = ${value}`) }; return t; },
   mulAdd: () => { const s = sg(), a = rnd(2, 4), t = rec(a, (x, i) => (x + s) * (i + 1)); t.explain = { formula: `f(1) = ${a}; f(n) = (f(n − 1) ${s < 0 ? '−' : '+'} 1)n`, steps: t.map((value, i) => i ? `f(${i + 1}) = (f(${i}) ${s < 0 ? '−' : '+'} 1) × ${i + 1} = (${t[i - 1]} ${s < 0 ? '−' : '+'} 1) × ${i + 1} = ${value}` : `f(1) = ${a}`) }; return t; },
   mulHalf: () => { const a = 4 * rnd(1, 3), t = rec(a, (x, i) => x * (i + 1) / 2); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) × n ÷ 2`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} × ${i + 1} ÷ 2 = ${value}` : `f(1) = ${a}`) }; return t; },
-  inter: () => { const f = mk(), g = mk(), t = S(i => (i % 2 ? g : f)(i >> 1)); t.explain = { formula: 'f(2k − 1) = A(k), f(2k) = B(k)', steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
+  inter: () => { const f = mk(), g = mk(), t = S(i => (i % 2 ? g : f)((i >> 1) + 1)); t.explain = { formula: `f(2k − 1) = ${f.label.replace(/^f\(k\) = /, '')}; f(2k) = ${g.label.replace(/^f\(k\) = /, '')}`, steps: t.map((value, i) => { const n = i + 1, k = Math.ceil(n / 2), rule = i % 2 ? g : f; return `f(${n}) = ${rule.at(k)} = ${value}`; }) }; return t; },
   parity: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f, g] = [PF[ix[0]], PF[ix[1]]], t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: `f(n) = \\begin{cases}${PF_LABELS[ix[0]]}, & n\\text{ odd}\\\\ ${PF_LABELS[ix[1]]}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   sqPrev: () => { const a = rnd(2, 6), d = rnd(1, 3), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? t[i - 1] ** 2 : a + d * (i / 2)); t.explain = { formula: `f(2k − 1) = ${a} + ${d}(k − 1); f(2k) = f(2k − 1)^2`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, constant = r ? o + 6 : o - 1, slope = r ? -1 : 1, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = ${polynomialForms(constant, slope, p, c)}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
