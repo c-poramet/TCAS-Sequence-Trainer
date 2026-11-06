@@ -20,7 +20,11 @@ const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)]
 const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,');
-const formulaMarkup = x => /[=^()]/.test(String(x)) ? `\\(${latex(x)}\\)` : `<span class="rule-prose">${esc(x)}</span>`;
+const formulaMarkup = x => {
+  const parts = String(x).split(';').map(part => part.trim()).filter(Boolean);
+  if (!/[=^()]/.test(String(x))) return `<span class="rule-prose">${esc(x)}</span>`;
+  return `<span class="formula-stack">${parts.map(part => `<span class="formula-row">\\(${latex(part)}\\)</span>`).join('')}</span>`;
+};
 const familyFormula = (family, t) => {
   const d = t[1] - t[0], r = t[0] ? t[1] / t[0] : 0;
   const formulas = {
