@@ -17,9 +17,39 @@ const PR = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61];
 const mk = () => { const a = rnd(1, 12); if (rnd(0, 1)) { const d = rnd(2, 9) * sg(); return j => a + d * j; } const r = rnd(2, 3); return j => a * r ** j; };
 const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1];
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
-const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
+const F_LABELS = ['n + 2', '2n', 'n²', '3n − 1', 'n² + n'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,');
+const polynomial = coefficients => {
+  const terms = [];
+  for (let degree = coefficients.length - 1; degree >= 0; degree--) {
+    const coefficient = coefficients[degree] || 0;
+    if (!coefficient) continue;
+    const magnitude = Math.abs(coefficient);
+    const variable = degree === 0 ? '' : degree === 1 ? 'n' : `n^${degree}`;
+    const value = degree === 0 ? String(magnitude) : magnitude === 1 ? variable : `${magnitude}${variable}`;
+    terms.push({ negative: coefficient < 0, value });
+  }
+  return terms.map((term, index) => {
+    const sign = term.negative ? '−' : '+';
+    return index === 0 ? `${term.negative ? '−' : ''}${term.value}` : `${sign} ${term.value}`;
+  }).join(' ') || '0';
+};
+const polynomialWithPrefix = (prefix, coefficients) => {
+  const expression = polynomial(coefficients);
+  if (expression === '0') return prefix;
+  return `${prefix} ${expression.startsWith('−') ? '−' : '+'} ${expression.replace(/^−|^\+\s*/, '')}`;
+};
+const binomialPower = (constant, slope, power, offset = 0) => {
+  const coefficients = Array(power + 1).fill(0);
+  for (let degree = 0; degree <= power; degree++) {
+    let choose = 1;
+    for (let i = 1; i <= degree; i++) choose *= (power - i + 1) / i;
+    coefficients[degree] = choose * slope ** degree * constant ** (power - degree);
+  }
+  coefficients[0] += offset;
+  return polynomial(coefficients);
+};
 const formulaMarkup = x => {
   const parts = String(x).split(';').map(part => part.trim()).filter(Boolean);
   if (!/[=^()]/.test(String(x))) return `<span class="rule-prose">${esc(x)}</span>`;
@@ -64,7 +94,7 @@ const FAM = {
   arith: () => { const a = rnd(-20, 90), d = rnd(2, 15) * sg(); return S(i => a + d * i); },
   geom: () => { const a = rnd(1, 6) * sg(), r = pk([2, 3, 4, -2, -3]); return S(i => a * r ** i); },
   geomDown: () => { const r = rnd(2, 5), a = rnd(1, 5) * r ** 5; return S(i => a / r ** i); },
-  dArith: () => { const a = rnd(-5, 30), d = rnd(1, 5), k = rnd(1, 4) * sg(), t = rec(a, (x, i) => x + d + k * i); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) + ${d} ${k < 0 ? '−' : '+'} ${Math.abs(k)}(n − 2)`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) + ${d} ${k < 0 ? '−' : '+'} ${Math.abs(k)}(${i}) = ${t[i - 1]} ${d + k * (i - 1) < 0 ? '−' : '+'} ${Math.abs(d + k * (i - 1))} = ${value}` : `f(1) = ${a}`) }; return t; },
+  dArith: () => { const a = rnd(-5, 30), d = rnd(1, 5), k = rnd(1, 4) * sg(), t = rec(a, (x, i) => x + d + k * i); t.explain = { formula: `f(1) = ${a}; ${polynomialWithPrefix('f(n) = f(n − 1)', [d - 2 * k, k])}`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) + ${d} ${k < 0 ? '−' : '+'} ${Math.abs(k)}(${i}) = ${t[i - 1]} ${d + k * (i - 1) < 0 ? '−' : '+'} ${Math.abs(d + k * (i - 1))} = ${value}` : `f(1) = ${a}`) }; return t; },
   dGeom: () => { const a = rnd(1, 20), m = rnd(1, 3), b = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * m * b ** i); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} ${m} × ${b}^{n − 2}`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${m} × ${b}^{i - 1} = ${value}` : `f(1) = ${a}`) }; return t; },
   dPow: () => { const a = rnd(1, 100), p = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * (i + 1) ** p); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} (n − 1)^${p}`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) ${s < 0 ? '−' : '+'} (${i})^${p} = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${i ** p} = ${value}` : `f(1) = ${a}`) }; return t; },
   fib: () => { const t = [rnd(-5, 6), rnd(1, 6) * sg()]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2]); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = f(n − 1) + f(n − 2)`, steps: t.map((value, i) => i < 2 ? `f(${i + 1}) = ${value}` : `f(${i + 1}) = f(${i}) + f(${i - 1}) = ${t[i - 1]} + ${t[i - 2]} = ${value}`) }; return t; },
@@ -75,8 +105,8 @@ const FAM = {
   inter: () => { const f = mk(), g = mk(), t = S(i => (i % 2 ? g : f)(i >> 1)); t.explain = { formula: 'f(2k − 1) = A(k), f(2k) = B(k)', steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   parity: () => { const [f, g] = shuffle([...PF]), t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: 'Odd positions use F₁(n); even positions use F₂(n)', steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   sqPrev: () => { const a = rnd(2, 6), d = rnd(1, 3), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? t[i - 1] ** 2 : a + d * (i / 2)); t.explain = { formula: `f(2k − 1) = ${a} + ${d}(k − 1); f(2k) = f(2k − 1)^2`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
-  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = (${r ? o + 6 : o - 1} ${r ? '− (n − 1)' : '+ (n − 1)'})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
-  pron: () => { const o = rnd(1, 5), t = S(i => (o + i) * (o + i + 1)); t.explain = { formula: `f(n) = (n + ${o - 1})(n + ${o})`, steps: t.map((value, i) => `f(${i + 1}) = (${o + i})(${o + i + 1}) = ${value}`) }; return t; },
+  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, constant = r ? o + 6 : o - 1, slope = r ? -1 : 1, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = ${binomialPower(constant, slope, p, c)}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
+  pron: () => { const o = rnd(1, 5), t = S(i => (o + i) * (o + i + 1)); t.explain = { formula: `f(n) = ${polynomial([o * (o - 1), 2 * o - 1, 1])}`, steps: t.map((value, i) => `f(${i + 1}) = (${o + i})(${o + i + 1}) = ${value}`) }; return t; },
   recip: () => { const c = pk([60, 120, 180, 360, 720]), t = S(i => c / (i + 1)); t.explain = { formula: `f(n) = ${c} ÷ n`, steps: t.map((value, i) => `f(${i + 1}) = ${c} ÷ ${i + 1} = ${value}`) }; return t; },
   prime: () => { const s = rnd(0, 9), q = rnd(0, 1), t = S(i => PR[s + i] ** (q ? 2 : 1)); t.explain = { formula: q ? 'f(n) = p_n^2, where p_n is the prime at position n' : 'f(n) = p_n, where p_n is the prime at position n', steps: t.map((value, i) => `f(${i + 1}) = ${PR[s + i]}${q ? `^2 = ${value}` : ` = ${value}`}`) }; return t; }
   ,entangled: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F1(n) = ${F_LABELS[ix[0]]}; F2(n) = ${F_LABELS[ix[1]]}; F3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F1(F2(n)) + F3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F2(${n}) = ${inner}; F1(${inner}) = ${outer}; F3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
