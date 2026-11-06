@@ -268,7 +268,15 @@ function nextUniqueQuestion(seen) {
 function exportPracticePdf() {
       const count = Math.max(1, Math.floor(Number(db.settings.n) || 10));
       const seed = newSeed(), seen = new Set();
-      const questions = withRng(makeRng(seed), () => Array.from({ length: count }, () => nextUniqueQuestion(seen)));
+      const previousContext = generationContext;
+      generationContext = { recent: [] };
+      const questions = withRng(makeRng(seed), () => Array.from({ length: count }, () => {
+        const q = nextUniqueQuestion(seen);
+        generationContext.recent.push(q.family || q.topic);
+        if (generationContext.recent.length > 2) generationContext.recent.shift();
+        return q;
+      }));
+      generationContext = previousContext;
     const questionBlocks = questions.map((q, index) => {
       const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
       return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div></article>`;
@@ -313,8 +321,9 @@ function pick() {
     const due = ids.filter(id => !db.topics[id]?.due || db.topics[id].due <= Date.now());
     if (due.length) ids = due;
   }
-  if (run?.recent?.length) {
-    const fresh = ids.filter(id => !run.recent.includes(id));
+  const currentContext = generationContext || run;
+  if (currentContext?.recent?.length) {
+    const fresh = ids.filter(id => !currentContext.recent.includes(id));
     if (fresh.length) ids = fresh;
   }
   if (db.settings.difficulty === 'hard' && ids.includes('entangled')) ids = ['entangled'];
@@ -365,7 +374,7 @@ function renderTopics() {
 }
 
 /* ============ RUN (focus mode) ============ */
-let run = null, raf = 0;
+let run = null, generationContext = null, raf = 0;
 const stage = $('#stage');
 function start(seedValue) {
   if (!enabled().length) return;

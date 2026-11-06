@@ -44,7 +44,7 @@ After each run, the review uses a split layout:
 5. Read the formatted function rule and calculation steps.
 6. Save the function under a custom tag for future practice.
 
-Use **Export practice PDF** from the trainer panel to create a printable worksheet using the current question count, difficulty, composition, tags, and enabled topics. Questions appear first and the full positional solutions begin on a new page.
+Use **Export practice PDF** from the trainer panel to create a printable worksheet using the current question count, difficulty, composition, tags, and enabled topics. Each sheet includes a numeric seed and QR code at the top. Enter that seed in **Seeded set** (or upload the QR image) to run the same question set in the trainer and see the interactive end-of-run solutions. Questions appear first and the full positional solutions begin on a new page.
 
 Incorrect answer cards are highlighted in red. The solution panel includes animated sequence values, styled mathematical expressions, intermediate values, and the complete derivation for composed functions.
 
