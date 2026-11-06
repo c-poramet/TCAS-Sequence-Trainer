@@ -279,7 +279,12 @@ function seededQuestions(count, seed) {
 }
 function exportPracticePdf() {
       const count = Math.max(1, Math.floor(Number(db.settings.n) || 10));
-      const seed = newSeed(), seen = new Set();
+      const requestedSeed = $('#pdfCurrentSeed').checked ? run?.seed || normalizeSeed($('#seedInput').value) : 0;
+      if ($('#pdfCurrentSeed').checked && !requestedSeed) {
+        alert('Start a seeded run or enter a seed before using the current seed.');
+        return;
+      }
+      const seed = requestedSeed || newSeed(), seen = new Set();
       const questions = seededQuestions(count, seed);
       const includeSolutions = $('#pdfSolutions').checked, includeHints = $('#pdfHints').checked;
     const questionBlocks = questions.map((q, index) => {
@@ -523,6 +528,8 @@ $('#qrInput').onchange = async e => {
 $('#btnPdf').onclick = exportPracticePdf;
 $('#pdfSolutions').checked = db.settings.pdfSolutions !== false;
 $('#pdfHints').checked = !!db.settings.pdfHints;
+$('#pdfCurrentSeed').checked = !!db.settings.pdfCurrentSeed;
+$('#pdfCurrentSeed').onchange = e => { db.settings.pdfCurrentSeed = e.target.checked; save(); };
 $('#pdfSolutions').onchange = e => { db.settings.pdfSolutions = e.target.checked; save(); };
 $('#pdfHints').onchange = e => { db.settings.pdfHints = e.target.checked; save(); };
 $('#selMode').value = db.settings.mode || 'choice'; $('#selMode').onchange = e => { db.settings.mode = e.target.value; save(); };
