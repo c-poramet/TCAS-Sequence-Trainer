@@ -117,6 +117,10 @@ input[type=range]{width:100%;accent-color:var(--clr-green);min-height:34px}
 .review-seq span{position:relative;min-width:42px;padding:8px 5px 16px;border:1px solid var(--border-md);border-radius:6px;background:var(--card-dark);text-align:center;color:var(--text-pri);font:700 var(--fs-sm) var(--font-mono)}
 .review-seq span.position-gap{border-color:var(--accent);color:var(--accent)}
 .review-seq small{position:absolute;bottom:2px;left:0;right:0;color:var(--text-dim);font:9px var(--font-mono)}
+.steps{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.steps summary{padding:5px 0;color:var(--clr-green);font:700 var(--fs-xs) var(--font-mono)}
+.steps ol{margin:8px 0 0 22px;padding:0;color:var(--text-sec);font:var(--fs-xs) var(--font-mono);line-height:1.7}
+.formula{padding:8px 10px;background:var(--card-dark);border-radius:6px;color:var(--text-pri)!important;font:var(--fs-xs) var(--font-mono)}
 .animate-in{animation:fade-up .22s ease-out both}
 @keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 

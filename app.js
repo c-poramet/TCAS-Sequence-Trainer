@@ -17,6 +17,43 @@ const PR = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61];
 const mk = () => { const a = rnd(1, 12); if (rnd(0, 1)) { const d = rnd(2, 9) * sg(); return j => a + d * j; } const r = rnd(2, 3); return j => a * r ** j; };
 const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1];
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
+const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
+const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const familyFormula = (family, t) => {
+  const d = t[1] - t[0], r = t[0] ? t[1] / t[0] : 0;
+  const formulas = {
+    arith: `f(n) = ${t[0]} ${d < 0 ? '- ' + Math.abs(d) : '+ ' + d}(n - 1)`,
+    geom: `f(n) = ${t[0]} × (${r})ⁿ⁻¹`,
+    geomDown: `f(n) = ${t[0]} ÷ (${t[0] / t[1]})ⁿ⁻¹`,
+    dArith: 'Add a difference that changes by a constant amount',
+    dGeom: 'Add a difference that multiplies each step',
+    dPow: 'Add ±(step number)² or ±(step number)³',
+    fib: 'f(n) = f(n − 1) + f(n − 2)',
+    altOp: 'Alternate multiplication and addition',
+    affine: 'f(n) = m × previous + c',
+    mulAdd: 'Add ±1, then multiply by the step number',
+    mulHalf: 'Multiply by the step number, then divide by 2',
+    inter: 'Two arithmetic/geometric rules interleaved',
+    parity: 'Two functions alternate by position',
+    sqPrev: 'Linear value, then square the previous value',
+    poly: 'f(n) = (linear expression)ᵖ + c',
+    pron: 'f(n) = n × (n + 1)',
+    recip: 'f(n) = constant ÷ n',
+    prime: 'f(n) = the nth prime (optionally squared)'
+  };
+  return formulas[family] || 'Apply the displayed sequence rule from left to right';
+};
+function explanation(family, t, custom) {
+  const formula = custom?.formula || familyFormula(family, t);
+  const steps = t.map((value, i) => {
+    const n = i + 1;
+    if (custom?.steps?.[i]) return `f(${n}) = ${custom.steps[i]} = ${value}`;
+    if (family === 'arith') return `f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
+    if (family === 'geom') return `f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
+    return `Position ${n}: apply the rule → ${value}`;
+  });
+  return { formula, steps };
+}
 const FAM = {
   arith: () => { const a = rnd(-20, 90), d = rnd(2, 15) * sg(); return S(i => a + d * i); },
   geom: () => { const a = rnd(1, 6) * sg(), r = pk([2, 3, 4, -2, -3]); return S(i => a * r ** i); },
@@ -36,8 +73,8 @@ const FAM = {
   pron: () => { const o = rnd(1, 5); return S(i => (o + i) * (o + i + 1)); },
   recip: () => { const c = pk([60, 120, 180, 360, 720]); return S(i => c / (i + 1)); },
   prime: () => { const s = rnd(0, 9), q = rnd(0, 1); return S(i => PR[s + i] ** (q ? 2 : 1)); }
-  ,entangled: () => { const [f1, f2, f3] = shuffle([...F]); const a = rnd(1, 5); return S(i => f1(f2(a + i)) + f3(a + i)); }
-  ,nested: () => { const [f1, f2, f3, f4] = shuffle([...F]); const a = rnd(1, 4); return S(i => f1(f2(f3(a + i))) + f4(a + i)); }
+  ,entangled: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F1(n) = ${F_LABELS[ix[0]]}; F2(n) = ${F_LABELS[ix[1]]}; F3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F1(F2(n)) + F3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F2(${n}) = ${inner}; F1(${inner}) = ${outer}; F3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  ,nested: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3, f4] = ix.slice(0, 4).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i))) + f4(a + i)); t.explain = { formula: `F1(n) = ${F_LABELS[ix[0]]}; F2(n) = ${F_LABELS[ix[1]]}; F3(n) = ${F_LABELS[ix[2]]}; F4(n) = ${F_LABELS[ix[3]]}; therefore f(n) = F1(F2(F3(n))) + F4(n)`, steps: t.map((value, i) => { const n = a + i, inner = f3(n), middle = f2(inner), outer = f1(middle), extra = f4(n); return `n = ${n}: F3(${n}) = ${inner}; F2(${inner}) = ${middle}; F1(${middle}) = ${outer}; F4(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
 };
 const GROUPS = {
   basic: ['Arithmetic & geometric', '＋', ['arith', 'geom', 'geomDown']],
@@ -52,7 +89,7 @@ function seqQ(id) {
   const family = pk(GROUPS[id][2]); let t; do t = FAM[family](); while (!valid(t));
   const h = rnd(0, 9) < 7 ? 5 : rnd(0, 4), ans = t[h], dl = Math.abs(t[2] - t[1]) || 3;
   const o = mcq(id, t.map((x, i) => i === h ? '?' : x).join(', '), ans, () => ans + pk([-1, 1, -2, 2, 10, -10, dl, -dl, dl + 1, -dl - 1, rnd(-9, 9)]));
-  o.seq = t.map((x, i) => i === h ? null : x); o.fullSeq = t; o.position = h; o.family = family; return o;
+  o.seq = t.map((x, i) => i === h ? null : x); o.fullSeq = t; o.position = h; o.family = family; o.explanation = explanation(family, t, t.explain); return o;
 }
 const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label, icon]]) => [id, { label, icon, gen: () => seqQ(id) }]));
 [...new Set(BANK.map(b => b.topic))].forEach(t => TOPICS['bank:' + t] = { label: t,
@@ -151,7 +188,7 @@ function judge(ok, delay) {
 function answer(i) {
   if (!run || run.locked || run.state !== 'go' || i >= run.q.choices.length) return;
   const ok = i === run.q.answer, bs = stage.querySelectorAll('.ch');
-  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, chosen: run.q.choices[i], correct: run.q.choices[run.q.answer], ok });
+  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, explanation: run.q.explanation, chosen: run.q.choices[i], correct: run.q.choices[run.q.answer], ok });
   bs[run.q.answer].classList.add('ok'); if (!ok) bs[i].classList.add('bad');
   judge(ok, ok ? 220 : 800);
 }
@@ -160,7 +197,7 @@ function submit(v) {
   const norm = x => String(x).trim().replace(/[−–]/g, '-').replace(/\s+/g, '').toLowerCase();
   const right = run.q.choices[run.q.answer], ok = norm(v) === norm(right), a = $('#ans');
   a.disabled = true; a.classList.add(ok ? 'ok' : 'bad'); if (!ok) $('#rev').textContent = 'Answer: ' + right;
-  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, chosen: v, correct: right, ok });
+  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, explanation: run.q.explanation, chosen: v, correct: right, ok });
   judge(ok, ok ? 220 : 1100);
 }
 function finish() {
@@ -169,7 +206,7 @@ function finish() {
   const prev = db.sessions.filter(s => s.n === run.n), pb = !prev.length || final < Math.min(...prev.map(s => s.final));
   db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, answers: run.answers }); save();
   const rows = Object.entries(run.by).map(([id, b]) => `<div class="row" style="grid-template-columns:1fr 60px 60px"><span>${TOPICS[id]?.label || id}</span><span class="m">${Math.round(b.c / b.n * 100)}%</span><span class="m">${(b.ms / b.n / 1000).toFixed(1)}s</span></div>`).join('');
-  const review = run.answers.map((a, i) => `<details class="review ${a.ok ? 'right' : 'wrong'}" ${a.ok ? '' : 'open'}><summary><b>${i + 1}.</b> ${a.ok ? 'Correct' : 'Incorrect'} · ${TOPICS[a.topic]?.label || a.topic}</summary><div>${a.fullSeq ? `<p class="review-seq">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'position-gap' : ''}">${p === a.position ? a.correct : x}<small>P${p + 1}</small></span>`).join('')}</p><p class="position-note">Position ${a.position + 1} was the missing value.</p>` : `<p>${a.q}</p>`}<p>Your answer: <strong>${a.chosen}</strong><br>Correct answer: <strong>${a.correct}</strong></p></div></details>`).join('');
+  const review = run.answers.map((a, i) => `<details class="review ${a.ok ? 'right' : 'wrong'}" ${a.ok ? '' : 'open'}><summary><b>${i + 1}.</b> ${a.ok ? 'Correct' : 'Incorrect'} · ${TOPICS[a.topic]?.label || a.topic}</summary><div>${a.fullSeq ? `<p class="review-seq">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'position-gap' : ''}">${p === a.position ? a.correct : x}<small>P${p + 1}</small></span>`).join('')}</p><p class="position-note">Position ${a.position + 1} was the missing value.</p><details class="steps"><summary>Show solution steps</summary><p class="formula">${esc(a.explanation?.formula || 'Sequence rule')}</p><ol>${(a.explanation?.steps || []).map(step => `<li>${esc(step)}</li>`).join('')}</ol></details>` : `<p>${esc(a.q)}</p>`}<p>Your answer: <strong>${esc(a.chosen)}</strong><br>Correct answer: <strong>${esc(a.correct)}</strong></p></div></details>`).join('');
   stage.innerHTML = `<div class="clock animate-in ${pb ? 'pb' : ''}">${fmt(final)}</div>
   <p class="meta">${pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · ${fmt(total)} + ${run.wrong} × 2s</p>
   <div class="result-grid"><div><span>Accuracy</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>Avg / Q</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>Best streak</span><b>${run.best}</b></div></div>
