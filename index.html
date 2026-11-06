@@ -33,6 +33,7 @@
             <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
             <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
             <button class="btn-primary mt" id="btnStart">Start · Space</button>
+            <button class="btn-secondary mt" id="btnPdf">Export practice PDF</button>
             <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
           </div>
           <details class="problem-config" id="problemConfig" open>
@@ -41,7 +42,7 @@
           <label class="lbl mt" for="selMode">Answer mode</label>
           <div class="select-wrap"><select id="selMode"><option value="choice">Multiple choice (1–5)</option><option value="type">Type answer</option></select></div>
           <label class="lbl mt" for="selDifficulty">Difficulty</label>
-          <div class="select-wrap"><select id="selDifficulty"><option value="mixed">Mixed logic</option><option value="hard">Hard · entangled functions</option><option value="expert">Expert · nested functions</option></select></div>
+          <div class="select-wrap"><select id="selDifficulty"><option value="normal">Normal · standard functions</option><option value="mixed">Mixed logic</option><option value="hard">Hard · entangled functions</option><option value="expert">Expert · nested functions</option></select></div>
           <label class="lbl mt" for="selComposition">Mixed logic composition</label>
           <div class="select-wrap"><select id="selComposition"><option value="light">Light · core rules</option><option value="balanced">Balanced · occasional composition</option><option value="composed">Composed · include entangled</option></select></div>
           <label class="training-toggle"><input type="checkbox" id="chkTraining"> Anki-style weakness training</label>

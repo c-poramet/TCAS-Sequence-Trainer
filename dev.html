@@ -6,6 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }, options: { skipHtmlTags: ['script', 'style', 'textarea', 'pre', 'code'] } };</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
 <header class="header"><a class="brand dev-brand" href="index.html">TCAS SEQUENCE TRAINER</a><span class="ctx">Developer lab</span><a class="dev-link" href="index.html">TRAINER</a></header>
@@ -15,9 +17,10 @@
     <section class="panel dev-controls">
       <div class="panel-title">Generator controls</div>
       <label class="lbl" for="devFamily">Function family</label><div class="select-wrap"><select id="devFamily"></select></div>
-      <label class="lbl mt" for="devDifficulty">Difficulty preset</label><div class="select-wrap"><select id="devDifficulty"><option>mixed</option><option>hard</option><option>expert</option></select></div>
+      <label class="lbl mt" for="devDifficulty">Difficulty preset</label><div class="select-wrap"><select id="devDifficulty"><option>normal</option><option>mixed</option><option>hard</option><option>expert</option></select></div>
       <label class="lbl mt" for="devCount">Sequence length</label><input id="devCount" class="custom-count" type="number" min="3" max="20" value="6">
       <button class="btn-primary mt" id="generate">Generate preview</button>
+      <button class="btn-secondary mt" id="generatePdf">Generate PDF</button>
       <button class="btn-secondary mt" id="generateAll">Generate all examples</button>
       <div class="panel-title mt">Storage tools</div>
       <button class="btn-secondary" id="exportData">Export local data</button>

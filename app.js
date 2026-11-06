@@ -16,10 +16,19 @@ const rec = (a, st) => { const t = [a]; for (let i = 0; i < 5; i++) t.push(st(t[
 const PR = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61];
 const mk = () => { const a = rnd(1, 12); if (rnd(0, 1)) { const d = rnd(2, 9) * sg(); return j => a + d * j; } const r = rnd(2, 3); return j => a * r ** j; };
 const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * n - 1];
+const PF_LABELS = ['n²', 'n³', '2n + 1', 'n² + n', '3n − 1'];
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
 const F_LABELS = ['n + 2', '2n', 'n²', '3n − 1', 'n² + n'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,');
+const latex = x => String(x)
+  .replace(/×/g, '\\times ')
+  .replace(/÷/g, '\\div ')
+  .replace(/−/g, '-')
+  .replace(/⁻¹/g, '^{-1}')
+  .replace(/\bn = /g, 'n\\,=\\,')
+  .replace(/\btherefore\b/g, ' ⇒ ')
+  .replace(/;\s*/g, '\\;\\quad ')
+  .replace(/:\s*/g, '\\;\\quad ');
 const polynomial = coefficients => {
   const terms = [];
   for (let degree = coefficients.length - 1; degree >= 0; degree--) {
@@ -50,6 +59,17 @@ const binomialPower = (constant, slope, power, offset = 0) => {
   coefficients[0] += offset;
   return polynomial(coefficients);
 };
+const signed = value => value < 0 ? `− ${Math.abs(value)}` : `+ ${value}`;
+const polynomialForms = (constant, slope, power, offset = 0) => {
+  const expanded = polynomial(Array.from({ length: power + 1 }, (_, degree) => {
+    let choose = 1;
+    for (let i = 1; i <= degree; i++) choose *= (power - i + 1) / i;
+    return choose * slope ** degree * constant ** (power - degree) + (degree === 0 ? offset : 0);
+  }));
+  if (power !== 2) return expanded;
+  const vertexOffset = slope * constant;
+  return `${expanded} = (n ${signed(vertexOffset)})^2${offset ? ` ${signed(offset)}` : ''}`;
+};
 const formulaMarkup = x => {
   const parts = String(x).split(';').map(part => part.trim()).filter(Boolean);
   if (!/[=^()]/.test(String(x))) return `<span class="rule-prose">${esc(x)}</span>`;
@@ -61,21 +81,21 @@ const familyFormula = (family, t) => {
     arith: `f(n) = ${t[0]} ${d < 0 ? '- ' + Math.abs(d) : '+ ' + d}(n - 1)`,
     geom: `f(n) = ${t[0]} × (${r})ⁿ⁻¹`,
     geomDown: `f(n) = ${t[0]} ÷ (${t[0] / t[1]})ⁿ⁻¹`,
-    dArith: 'Recursive difference rule',
-    dGeom: 'Recursive geometric-difference rule',
-    dPow: 'Recursive power-difference rule',
+    dArith: 'f(n) = f(n − 1) + Δ(n)',
+    dGeom: 'f(n) = f(n − 1) + Δr^{n − 2}',
+    dPow: 'f(n) = f(n − 1) + (n − 1)^p',
     fib: 'f(n) = f(n − 1) + f(n − 2)',
-    altOp: 'Alternate multiplication and addition',
-    affine: 'Affine recurrence',
-    mulAdd: 'Recursive multiply-after-add rule',
-    mulHalf: 'Recursive multiply-and-divide rule',
-    inter: 'Interleaved positional rule',
-    parity: 'Alternating positional rule',
-    sqPrev: 'Alternating linear-and-square rule',
-    poly: 'Polynomial rule',
-    pron: 'f(n) = n × (n + 1)',
-    recip: 'Reciprocal positional rule',
-    prime: 'Prime positional rule'
+    altOp: 'f(n) = \\begin{cases}p f(n - 1), & n\\text{ even}\\\\ f(n - 1) + q, & n\\text{ odd}\\end{cases}',
+    affine: 'f(n) = m f(n − 1) + c',
+    mulAdd: 'f(n) = (f(n − 1) ± 1)n',
+    mulHalf: 'f(n) = f(n − 1)n ÷ 2',
+    inter: 'f(2k − 1) = A(k); f(2k) = B(k)',
+    parity: 'f(n) = \\begin{cases}F_1(n), & n\\text{ odd}\\\\ F_2(n), & n\\text{ even}\\end{cases}',
+    sqPrev: 'f(2k − 1) = a + d(k − 1); f(2k) = f(2k − 1)^2',
+    poly: 'f(n) = an^2 + bn + c',
+    pron: 'f(n) = n^2 + n',
+    recip: 'f(n) = c ÷ n',
+    prime: 'f(n) = p_n'
   };
   return formulas[family] || `f(n) = value at position n`;
 };
@@ -98,19 +118,19 @@ const FAM = {
   dGeom: () => { const a = rnd(1, 20), m = rnd(1, 3), b = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * m * b ** i); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} ${m} × ${b}^{n − 2}`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${m} × ${b}^{i - 1} = ${value}` : `f(1) = ${a}`) }; return t; },
   dPow: () => { const a = rnd(1, 100), p = pk([2, 3]), s = sg(), t = rec(a, (x, i) => x + s * (i + 1) ** p); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) ${s < 0 ? '−' : '+'} (n − 1)^${p}`, steps: t.map((value, i) => i ? `f(${i + 1}) = f(${i}) ${s < 0 ? '−' : '+'} (${i})^${p} = ${t[i - 1]} ${s < 0 ? '−' : '+'} ${i ** p} = ${value}` : `f(1) = ${a}`) }; return t; },
   fib: () => { const t = [rnd(-5, 6), rnd(1, 6) * sg()]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2]); t.explain = { formula: `f(1) = ${t[0]}, f(2) = ${t[1]}; f(n) = f(n − 1) + f(n − 2)`, steps: t.map((value, i) => i < 2 ? `f(${i + 1}) = ${value}` : `f(${i + 1}) = f(${i}) + f(${i - 1}) = ${t[i - 1]} + ${t[i - 2]} = ${value}`) }; return t; },
-  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(), a = rnd(2, 9), t = rec(a, (x, i) => i % 2 ? x + q : x * p); t.explain = { formula: `Odd steps: multiply by ${p}; even steps: ${q < 0 ? 'subtract' : 'add'} ${Math.abs(q)}`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${i % 2 ? `f(${i}) ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `f(${i}) × ${p}`} = ${i % 2 ? `${t[i - 1]} ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `${t[i - 1]} × ${p}`} = ${value}`) }; return t; },
+  altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(), a = rnd(2, 9), t = rec(a, (x, i) => i % 2 ? x + q : x * p); t.explain = { formula: `f(1) = ${a}; f(n) = \\begin{cases}${p}f(n − 1), & n\\text{ odd}\\\\ f(n − 1) ${q < 0 ? '−' : '+'} ${Math.abs(q)}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${i % 2 ? `f(${i}) ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `f(${i}) × ${p}`} = ${i % 2 ? `${t[i - 1]} ${q < 0 ? '−' : '+'} ${Math.abs(q)}` : `${t[i - 1]} × ${p}`} = ${value}`) }; return t; },
   affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(), a = rnd(0, 5), t = rec(a, x => m * x + c); t.explain = { formula: `f(n) = ${m} × f(n − 1) + (${c})`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${m} × f(${i}) + (${c}) = ${m} × (${t[i - 1]}) + (${c}) = ${value}`) }; return t; },
   mulAdd: () => { const s = sg(), a = rnd(2, 4), t = rec(a, (x, i) => (x + s) * (i + 1)); t.explain = { formula: `f(1) = ${a}; f(n) = (f(n − 1) ${s < 0 ? '−' : '+'} 1)n`, steps: t.map((value, i) => i ? `f(${i + 1}) = (f(${i}) ${s < 0 ? '−' : '+'} 1) × ${i + 1} = (${t[i - 1]} ${s < 0 ? '−' : '+'} 1) × ${i + 1} = ${value}` : `f(1) = ${a}`) }; return t; },
   mulHalf: () => { const a = 4 * rnd(1, 3), t = rec(a, (x, i) => x * (i + 1) / 2); t.explain = { formula: `f(1) = ${a}; f(n) = f(n − 1) × n ÷ 2`, steps: t.map((value, i) => i ? `f(${i + 1}) = ${t[i - 1]} × ${i + 1} ÷ 2 = ${value}` : `f(1) = ${a}`) }; return t; },
   inter: () => { const f = mk(), g = mk(), t = S(i => (i % 2 ? g : f)(i >> 1)); t.explain = { formula: 'f(2k − 1) = A(k), f(2k) = B(k)', steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
-  parity: () => { const [f, g] = shuffle([...PF]), t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: 'Odd positions use F₁(n); even positions use F₂(n)', steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
+  parity: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f, g] = [PF[ix[0]], PF[ix[1]]], t = S(i => (i % 2 ? g : f)(i + 1)); t.explain = { formula: `f(n) = \\begin{cases}${PF_LABELS[ix[0]]}, & n\\text{ odd}\\\\ ${PF_LABELS[ix[1]]}, & n\\text{ even}\\end{cases}`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
   sqPrev: () => { const a = rnd(2, 6), d = rnd(1, 3), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? t[i - 1] ** 2 : a + d * (i / 2)); t.explain = { formula: `f(2k − 1) = ${a} + ${d}(k − 1); f(2k) = f(2k − 1)^2`, steps: t.map((value, i) => `f(${i + 1}) = ${value}`) }; return t; },
-  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, constant = r ? o + 6 : o - 1, slope = r ? -1 : 1, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = ${binomialPower(constant, slope, p, c)}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
+  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, constant = r ? o + 6 : o - 1, slope = r ? -1 : 1, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = ${polynomialForms(constant, slope, p, c)}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
   pron: () => { const o = rnd(1, 5), t = S(i => (o + i) * (o + i + 1)); t.explain = { formula: `f(n) = ${polynomial([o * (o - 1), 2 * o - 1, 1])}`, steps: t.map((value, i) => `f(${i + 1}) = (${o + i})(${o + i + 1}) = ${value}`) }; return t; },
   recip: () => { const c = pk([60, 120, 180, 360, 720]), t = S(i => c / (i + 1)); t.explain = { formula: `f(n) = ${c} ÷ n`, steps: t.map((value, i) => `f(${i + 1}) = ${c} ÷ ${i + 1} = ${value}`) }; return t; },
-  prime: () => { const s = rnd(0, 9), q = rnd(0, 1), t = S(i => PR[s + i] ** (q ? 2 : 1)); t.explain = { formula: q ? 'f(n) = p_n^2, where p_n is the prime at position n' : 'f(n) = p_n, where p_n is the prime at position n', steps: t.map((value, i) => `f(${i + 1}) = ${PR[s + i]}${q ? `^2 = ${value}` : ` = ${value}`}`) }; return t; }
-  ,entangled: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F1(n) = ${F_LABELS[ix[0]]}; F2(n) = ${F_LABELS[ix[1]]}; F3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F1(F2(n)) + F3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F2(${n}) = ${inner}; F1(${inner}) = ${outer}; F3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
-  ,nested: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3, f4] = ix.slice(0, 4).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i))) + f4(a + i)); t.explain = { formula: `F1(n) = ${F_LABELS[ix[0]]}; F2(n) = ${F_LABELS[ix[1]]}; F3(n) = ${F_LABELS[ix[2]]}; F4(n) = ${F_LABELS[ix[3]]}; therefore f(n) = F1(F2(F3(n))) + F4(n)`, steps: t.map((value, i) => { const n = a + i, inner = f3(n), middle = f2(inner), outer = f1(middle), extra = f4(n); return `n = ${n}: F3(${n}) = ${inner}; F2(${inner}) = ${middle}; F1(${middle}) = ${outer}; F4(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  prime: () => { const s = rnd(0, 9), q = rnd(0, 1), t = S(i => PR[s + i] ** (q ? 2 : 1)); t.explain = { formula: q ? 'f(n) = p_n^2; p_n = \\text{the }n\\text{-th prime}' : 'f(n) = p_n; p_n = \\text{the }n\\text{-th prime}', steps: t.map((value, i) => `f(${i + 1}) = ${PR[s + i]}${q ? `^2 = ${value}` : ` = ${value}`}`) }; return t; }
+  ,entangled: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3] = ix.slice(0, 3).map(i => F[i]), a = rnd(1, 5), t = S(i => f1(f2(a + i)) + f3(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; therefore f(n) = F_1(F_2(n)) + F_3(n)`, steps: t.map((value, i) => { const n = a + i, inner = f2(n), outer = f1(inner), extra = f3(n); return `n = ${n}: F_2(${n}) = ${inner}; F_1(${inner}) = ${outer}; F_3(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
+  ,nested: () => { const ix = shuffle([0, 1, 2, 3, 4]), [f1, f2, f3, f4] = ix.slice(0, 4).map(i => F[i]), a = rnd(1, 4), t = S(i => f1(f2(f3(a + i))) + f4(a + i)); t.explain = { formula: `F_1(n) = ${F_LABELS[ix[0]]}; F_2(n) = ${F_LABELS[ix[1]]}; F_3(n) = ${F_LABELS[ix[2]]}; F_4(n) = ${F_LABELS[ix[3]]}; therefore f(n) = F_1(F_2(F_3(n))) + F_4(n)`, steps: t.map((value, i) => { const n = a + i, inner = f3(n), middle = f2(inner), outer = f1(middle), extra = f4(n); return `n = ${n}: F_3(${n}) = ${inner}; F_2(${inner}) = ${middle}; F_1(${middle}) = ${outer}; F_4(${n}) = ${extra}; ${outer} + ${extra} = ${value}`; }) }; return t; }
 };
 const GROUPS = {
   basic: ['Arithmetic & geometric', '＋', ['arith', 'geom', 'geomDown']],
@@ -131,6 +151,24 @@ const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label, icon]
 [...new Set(BANK.map(b => b.topic))].forEach(t => TOPICS['bank:' + t] = { label: t,
   gen() { const p = BANK.filter(b => b.topic === t), it = p[rnd(0, p.length - 1)], ans = it.choices[it.answer], c = shuffle([...it.choices]);
     return { topic: 'bank:' + t, q: it.q, choices: c, answer: c.indexOf(ans) }; } });
+
+function exportPracticePdf() {
+    const count = Math.max(1, Math.min(50, Number(db.settings.n) || 10));
+    const questions = Array.from({ length: count }, () => pick());
+    const questionBlocks = questions.map((q, index) => {
+      const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
+      return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div></article>`;
+    }).join('');
+    const solutionBlocks = questions.map((q, index) => `<article class="pdf-solution"><h2>Question ${index + 1} solution</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p>${q.fullSeq ? `<div class="pdf-sequence">${q.fullSeq.map((value, position) => `<span class="${position === q.position ? 'missing' : ''}"><b>P${position + 1}</b>${value}</span>`).join('')}</div><div class="pdf-formula">${formulaMarkup(q.explanation?.formula || 'Sequence rule')}</div><ol>${(q.explanation?.steps || []).map(step => `<li>\\(${latex(step)}\\)</li>`).join('')}</ol><p class="pdf-answer">Correct answer: <strong>${esc(q.correct || q.choices?.[q.answer] || '')}</strong></p>` : `<p>${esc(q.q)}</p>`}</article>`).join('');
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { alert('Please allow pop-ups to generate the PDF.'); return; }
+    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>TCAS Sequence Trainer · Practice Sheet</title>
+      <style>
+        @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
+      </style><script>window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+      </head><body><header><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions · ${esc(db.settings.difficulty)} difficulty · ${esc(db.settings.composition)} composition</p></header><main><section>${questionBlocks}</section><section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section></main><p class="footer">Generated from the trainer settings. Print or save this page as PDF.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
+    printWindow.document.close();
+}
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
@@ -166,6 +204,7 @@ function pick() {
   }
   if (db.settings.difficulty === 'hard' && ids.includes('entangled')) ids = ['entangled'];
   if (db.settings.difficulty === 'expert' && ids.includes('entangled')) ids = ['entangled'];
+  if (db.settings.difficulty === 'normal') ids = ids.filter(id => id !== 'entangled');
   if (db.settings.difficulty === 'mixed' && db.settings.composition === 'balanced') ids = ids.filter(id => id !== 'entangled');
   if (db.settings.difficulty === 'mixed' && db.settings.composition === 'light') ids = ids.filter(id => id !== 'entangled' && id !== 'pow');
   if (!ids.length) ids = enabled();
@@ -204,9 +243,10 @@ function renderTopics() {
   $('#topicList').innerHTML = Object.entries(TOPICS).map(([id, t]) => `<label class="topic"><input type="checkbox" data-id="${id}" ${db.settings.off.includes(id) ? '' : 'checked'}><span class="topic-icon">${t.icon || '•'}</span>${t.label}</label>`).join('');
   document.querySelectorAll('#topicList input').forEach(el => el.onchange = () => {
     const off = new Set(db.settings.off); el.checked ? off.delete(el.dataset.id) : off.add(el.dataset.id);
-    db.settings.off = [...off]; $('#btnStart').disabled = !enabled().length; save();
+    db.settings.off = [...off]; $('#btnStart').disabled = !enabled().length; $('#btnPdf').disabled = !enabled().length; save();
   });
   $('#btnStart').disabled = !enabled().length;
+  $('#btnPdf').disabled = !enabled().length;
 }
 
 /* ============ RUN (focus mode) ============ */
@@ -317,7 +357,7 @@ function quit() { cancelAnimationFrame(raf); run = null; stage.classList.remove(
 
 /* ============ SETTINGS + INPUT ============ */
 const layout = $('#layout'), toggleSettings = () => layout.classList.toggle('settings-open'), closeSettings = () => layout.classList.remove('settings-open');
-$('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = start;
+$('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = start; $('#btnPdf').onclick = exportPracticePdf;
 $('#selMode').value = db.settings.mode || 'choice'; $('#selMode').onchange = e => { db.settings.mode = e.target.value; save(); };
 $('#selDifficulty').value = db.settings.difficulty || 'mixed'; $('#selDifficulty').onchange = e => { db.settings.difficulty = e.target.value; save(); };
 $('#selComposition').value = db.settings.composition || 'balanced'; $('#selComposition').onchange = e => { db.settings.composition = e.target.value; save(); };

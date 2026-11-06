@@ -22,6 +22,13 @@ No build step, package installation, or server is required.
   - **Light** — core rules only.
   - **Balanced** — occasional composed rules.
   - **Composed** — includes entangled functions in mixed runs.
+
+  Difficulty presets:
+
+  - **Normal** — standard arithmetic, geometric, recurrence, interleaved, and polynomial functions.
+  - **Mixed logic** — varies the standard families according to the composition setting.
+  - **Hard** — focuses on entangled functions.
+  - **Expert** — focuses on the most deeply nested function combinations.
 - **Anki-style weakness training** — prioritizes weak and due topics.
 - **Practice tag** — limits generated questions to saved function tags.
 - **Topics** — enable or disable topic families with the topic checkboxes.
@@ -36,6 +43,8 @@ After each run, the review uses a split layout:
 4. Compare your answer with the correct answer.
 5. Read the formatted function rule and calculation steps.
 6. Save the function under a custom tag for future practice.
+
+Use **Export practice PDF** from the trainer panel to create a printable worksheet using the current question count, difficulty, composition, tags, and enabled topics. Questions appear first and the full positional solutions begin on a new page.
 
 Incorrect answer cards are highlighted in red. The solution panel includes animated sequence values, styled mathematical expressions, intermediate values, and the complete derivation for composed functions.
 
@@ -98,6 +107,7 @@ Open [dev.html](./dev.html) to use the internal developer tools:
 - Browse all 20 sequence/function families.
 - View a formula and example sequence for each family.
 - Select a family and difficulty preset for a live preview.
+- Generate a print-ready PDF for the selected family, difficulty, and sequence length.
 - Animate the complete function catalog into view.
 - Inspect local session, topic, and tag counts.
 - Export the current `localStorage` data as JSON.
