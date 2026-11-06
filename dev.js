@@ -17,7 +17,7 @@ const families = [
   ['inter','Interleaved rules','Two sequences alternate positions','2, 6, 5, 18, 8, 54'],
   ['parity','Parity functions','Two functions alternate by position','1, 8, 9, 64, 25, 216'],
   ['sqPrev','Square previous','Linear term followed by a square','3, 9, 6, 36, 9, 81'],
-  ['poly','Polynomial','f(n) = (linear expression)ᵖ + c','1, 4, 9, 16, 25, 36'],
+  ['poly','Polynomial','f(n) = (n + 1)²','1, 4, 9, 16, 25, 36'],
   ['pron','Product of neighbours','f(n) = n(n + 1)','2, 6, 12, 20, 30, 42'],
   ['recip','Reciprocal','f(n) = constant ÷ n','60, 30, 20, 15, 12, 10'],
   ['prime','Prime powers','Prime sequence, optionally squared','2, 3, 5, 7, 11, 13'],

@@ -19,7 +19,7 @@ const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * 
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
 const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const math = x => esc(x).replace(/\^(\d+)/g, '<sup>$1</sup>').replace(/⁻¹/g, '<sup>−1</sup>');
+const latex = x => String(x).replace(/×/g, '\\times ').replace(/−/g, '-').replace(/⁻¹/g, '^{-1}').replace(/\bn = /g, 'n\\,=\\,').replace(/\bf\(/g, 'f\\(');
 const familyFormula = (family, t) => {
   const d = t[1] - t[0], r = t[0] ? t[1] / t[0] : 0;
   const formulas = {
@@ -37,7 +37,7 @@ const familyFormula = (family, t) => {
     inter: 'Two arithmetic/geometric rules interleaved',
     parity: 'Two functions alternate by position',
     sqPrev: 'Linear value, then square the previous value',
-    poly: 'f(n) = (linear expression)ᵖ + c',
+    poly: 'Polynomial rule',
     pron: 'f(n) = n × (n + 1)',
     recip: 'f(n) = constant ÷ n',
     prime: 'f(n) = the nth prime (optionally squared)'
@@ -48,10 +48,10 @@ function explanation(family, t, custom) {
   const formula = custom?.formula || familyFormula(family, t);
   const steps = t.map((value, i) => {
     const n = i + 1;
-    if (custom?.steps?.[i]) return `n = ${n} (position ${n}): ${custom.steps[i]} = ${value}`;
-    if (family === 'arith') return `n = ${n} (position ${n}): f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
-    if (family === 'geom') return `n = ${n} (position ${n}): f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
-    return `n = ${n} (position ${n}): apply the rule → ${value}`;
+    if (custom?.steps?.[i]) return `n = ${n}: ${custom.steps[i]} = ${value}`;
+    if (family === 'arith') return `n = ${n}: f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
+    if (family === 'geom') return `n = ${n}: f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
+    return `n = ${n}: f(${n}) = ${value}`;
   });
   return { formula, steps };
 }
@@ -64,13 +64,13 @@ const FAM = {
   dPow: () => { const a = rnd(1, 100), p = pk([2, 3]), s = sg(); return rec(a, (x, i) => x + s * (i + 1) ** p); },
   fib: () => { const t = [rnd(-5, 6), rnd(1, 6) * sg()]; while (t.length < 6) t.push(t[t.length - 1] + t[t.length - 2]); return t; },
   altOp: () => { const p = pk([2, 3, -2]), q = rnd(2, 12) * sg(); return rec(rnd(2, 9), (x, i) => i % 2 ? x + q : x * p); },
-  affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(); return rec(rnd(0, 5), x => m * x + c); },
+  affine: () => { const m = pk([2, 3, -2, -3]), c = rnd(1, 6) * sg(), a = rnd(0, 5), t = rec(a, x => m * x + c); t.explain = { formula: `f(n) = ${m} × f(n − 1) + (${c})`, steps: t.map((value, i) => i === 0 ? `f(1) = ${a}` : `f(${i + 1}) = ${m} × f(${i}) + (${c}) = ${m} × (${t[i - 1]}) + (${c}) = ${value}`) }; return t; },
   mulAdd: () => { const s = sg(); return rec(rnd(2, 4), (x, i) => (x + s) * (i + 1)); },
   mulHalf: () => rec(4 * rnd(1, 3), (x, i) => x * (i + 1) / 2),
   inter: () => { const f = mk(), g = mk(); return S(i => (i % 2 ? g : f)(i >> 1)); },
   parity: () => { const [f, g] = shuffle([...PF]); return S(i => (i % 2 ? g : f)(i + 1)); },
   sqPrev: () => { const a = rnd(2, 6), d = rnd(1, 3), t = []; for (let i = 0; i < 6; i++) t.push(i % 2 ? t[i - 1] ** 2 : a + d * (i / 2)); return t; },
-  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1); return S(i => (r ? o + 5 - i : o + i) ** p + c); },
+  poly: () => { const p = pk([2, 3]), o = p === 3 ? rnd(-4, 3) : rnd(1, 8), c = p === 2 ? rnd(0, 9) * sg() : 0, r = rnd(0, 1), base = i => r ? o + 5 - i : o + i, t = S(i => base(i) ** p + c); t.explain = { formula: `f(n) = (${r ? o + 6 : o - 1} ${r ? '− (n − 1)' : '+ (n − 1)'})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''}`, steps: t.map((value, i) => { const n = i + 1, b = base(i); return `f(${n}) = (${b})^${p}${c ? ` ${c < 0 ? '−' : '+'} ${Math.abs(c)}` : ''} = ${value}`; }) }; return t; },
   pron: () => { const o = rnd(1, 5); return S(i => (o + i) * (o + i + 1)); },
   recip: () => { const c = pk([60, 120, 180, 360, 720]); return S(i => c / (i + 1)); },
   prime: () => { const s = rnd(0, 9), q = rnd(0, 1); return S(i => PR[s + i] ** (q ? 2 : 1)); }
@@ -245,7 +245,7 @@ function finish() {
     pane.classList.remove('solution-in'); void pane.offsetWidth; pane.classList.add('solution-in');
     pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok ? 'good' : 'bad'}">${a.ok ? '✓' : '×'}</span></div>
       <p class="solution-topic">${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')}</p>
-      ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="notation"><span>n = position number</span><strong>f(n) = function of n</strong></div><div class="math-block">${math(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><code>${math(step)}</code></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
+      ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">\\(${latex(a.explanation?.formula || 'Sequence rule')}\\)</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
       <div class="answer-compare"><span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span><span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
       <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
     pane.querySelector('.tag-action').onclick = () => {
@@ -254,6 +254,7 @@ function finish() {
       const name = tag.trim(); db.tags[name] = [...new Set([...(db.tags[name] || []), a.family || a.topic])]; save(); renderDash();
       pane.querySelector('.tag-action').textContent = `✓ Saved as ${name}`;
     };
+    if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise([pane]);
   };
   stage.querySelectorAll('.review-card').forEach((card, i) => card.onclick = () => openSolution(i));
   run.state = 'done'; $('#again').onclick = start; $('#home').onclick = quit; $('#again').focus();
