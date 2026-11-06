@@ -19,6 +19,7 @@ const PF = [n => n * n, n => n ** 3, n => 2 * n + 1, n => n * (n + 1), n => 3 * 
 const F = [n => n + 2, n => n * 2, n => n * n, n => 3 * n - 1, n => n * (n + 1)];
 const F_LABELS = ['n + 2', '2n', 'n²', '3n - 1', 'n(n + 1)'];
 const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const math = x => esc(x).replace(/\^(\d+)/g, '<sup>$1</sup>').replace(/⁻¹/g, '<sup>−1</sup>');
 const familyFormula = (family, t) => {
   const d = t[1] - t[0], r = t[0] ? t[1] / t[0] : 0;
   const formulas = {
@@ -47,10 +48,10 @@ function explanation(family, t, custom) {
   const formula = custom?.formula || familyFormula(family, t);
   const steps = t.map((value, i) => {
     const n = i + 1;
-    if (custom?.steps?.[i]) return `f(${n}) = ${custom.steps[i]} = ${value}`;
-    if (family === 'arith') return `f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
-    if (family === 'geom') return `f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
-    return `Position ${n}: apply the rule → ${value}`;
+    if (custom?.steps?.[i]) return `n = ${n} (position ${n}): ${custom.steps[i]} = ${value}`;
+    if (family === 'arith') return `n = ${n} (position ${n}): f(${n}) = ${t[0]} ${i && t[1] - t[0] < 0 ? '- ' + Math.abs(t[1] - t[0]) + ' × ' + i : i ? '+ ' + (t[1] - t[0]) + ' × ' + i : ''} = ${value}`;
+    if (family === 'geom') return `n = ${n} (position ${n}): f(${n}) = ${t[0]} × (${t[1] / t[0]})^${i} = ${value}`;
+    return `n = ${n} (position ${n}): apply the rule → ${value}`;
   });
   return { formula, steps };
 }
@@ -98,7 +99,7 @@ const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label, icon]
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
-let db = { topics: {}, sessions: [], settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', off: [], statFilter: 'all' } };
+let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', off: [], statFilter: 'all' } };
 try { const x = JSON.parse(localStorage.getItem(KEY)); if (x) db = { ...db, ...x, settings: { ...db.settings, ...x.settings } }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
 
@@ -110,16 +111,29 @@ const enabled = () => Object.keys(TOPICS).filter(id => !db.settings.off.includes
 function weight(id) { // weak or slow or unseen topics appear more often
   const t = db.topics[id]; if (!t || t.n < 3) return 2.5;
   const avg = t.ms / t.n, all = Object.values(db.topics).filter(x => x.n), mean = all.reduce((s, x) => s + x.ms / x.n, 0) / all.length;
-  return 1 + 4 * (1 - t.c / t.n) + Math.max(0, Math.min(1.5, avg / mean - 1));
+  const difficulty = 1 - t.c / t.n, overdue = t.due && t.due <= Date.now() ? 2 : 0;
+  return db.settings.training ? 1 + 8 * difficulty + overdue : 1 + 4 * difficulty + Math.max(0, Math.min(1.5, avg / mean - 1));
 }
 function pick() {
   let ids = enabled();
+  if (db.settings.tagFilter && db.settings.tagFilter !== 'all') {
+      const tagged = new Set(db.tags?.[db.settings.tagFilter] || []);
+      const taggedIds = ids.filter(id => tagged.has(id) || (GROUPS[id]?.[2] || []).some(family => tagged.has(family)));
+    if (taggedIds.length) ids = taggedIds;
+  }
+  if (db.settings.training) {
+    const due = ids.filter(id => !db.topics[id]?.due || db.topics[id].due <= Date.now());
+    if (due.length) ids = due;
+  }
   if (run?.recent?.length) {
     const fresh = ids.filter(id => !run.recent.includes(id));
     if (fresh.length) ids = fresh;
   }
   if (db.settings.difficulty === 'hard' && ids.includes('entangled')) ids = ['entangled'];
   if (db.settings.difficulty === 'expert' && ids.includes('entangled')) ids = ['entangled'];
+  if (db.settings.difficulty === 'mixed' && db.settings.composition === 'balanced') ids = ids.filter(id => id !== 'entangled');
+  if (db.settings.difficulty === 'mixed' && db.settings.composition === 'light') ids = ids.filter(id => id !== 'entangled' && id !== 'pow');
+  if (!ids.length) ids = enabled();
   const w = ids.map(weight); let r = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < ids.length; i++) if ((r -= w[i]) <= 0) return TOPICS[ids[i]].gen();
   return TOPICS[ids[0]].gen();
@@ -143,6 +157,13 @@ function renderDash() {
   $('#chart').innerHTML = chart.length ? chart.map(s => `<div class="chart-col"><i style="height:${Math.max(8, s.c / s.n * 100)}%" title="${Math.round(s.c / s.n * 100)}% accuracy"></i><span>${Math.round(s.c / s.n * 100)}%</span></div>`).join('') : '<p class="empty">Complete runs to see your record chart.</p>';
   const weak = Object.entries(db.topics).filter(([, t]) => t.n && acc(t) < .8).sort((a, b) => acc(a[1]) - acc(b[1])).slice(0, 3);
   $('#guide').innerHTML = weak.length ? `<p>Prioritize ${weak.map(([id]) => `<b>${TOPICS[id]?.label || id}</b>`).join(', ')}. Slow down on the first difference, then explain the rule aloud before choosing.</p>` : '<p>Keep mixing topics. Aim for 90% accuracy before pushing the difficulty higher.</p>';
+  const frequency = Object.entries(db.topics).filter(([, t]) => t.n).sort((a, b) => b.n - a.n);
+  $('#frequency').innerHTML = frequency.length ? frequency.map(([id, t]) => `<div class="freq-row"><span>${TOPICS[id]?.label || id}</span><b>${t.n}</b><i style="width:${Math.min(100, t.n / Math.max(...frequency.map(([, x]) => x.n)) * 100)}%"></i><small>${t.due && t.due > Date.now() ? 'scheduled' : 'due now'}</small></div>`).join('') : '<p class="empty">Frequency appears after your first run.</p>';
+  const tagSelect = $('#selTagFilter');
+  if (tagSelect) {
+    tagSelect.innerHTML = '<option value="all">All functions</option>' + Object.keys(db.tags || {}).sort().map(tag => `<option value="${esc(tag)}">${esc(tag)}</option>`).join('');
+    tagSelect.value = db.settings.tagFilter || 'all';
+  }
 }
 function renderTopics() {
   $('#topicList').innerHTML = Object.entries(TOPICS).map(([id, t]) => `<label class="topic"><input type="checkbox" data-id="${id}" ${db.settings.off.includes(id) ? '' : 'checked'}><span class="topic-icon">${t.icon || '•'}</span>${t.label}</label>`).join('');
@@ -159,6 +180,7 @@ const stage = $('#stage');
 function start() {
   if (!enabled().length) return;
   run = { n: db.settings.n, i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], q: null, locked: false, state: 'ready' };
+  stage.classList.remove('solution-focus');
   document.body.classList.add('focus'); stage.hidden = false; closeSettings();
   stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Esc to cancel</p>`;
 }
@@ -180,7 +202,10 @@ function next() {
 function judge(ok, delay) {
   run.locked = true;
   const dt = performance.now() - run.qt, id = run.q.topic;
+  const currentAnswer = run.answers[run.answers.length - 1]; if (currentAnswer) currentAnswer.time = dt;
   const t = db.topics[id] || (db.topics[id] = { n: 0, c: 0, ms: 0 }); t.n++; t.ms += dt; if (ok) t.c++;
+  t.ease = ok ? Math.min(2.5, (t.ease || 1.3) + .08) : Math.max(1, (t.ease || 1.3) - .2);
+  t.due = Date.now() + (ok ? t.ease * 86400000 : 15 * 60000);
   const b = run.by[id] || (run.by[id] = { n: 0, c: 0, ms: 0 }); b.n++; b.ms += dt; if (ok) b.c++;
   run.i++; ok ? (run.c++, run.streak++, run.best = Math.max(run.best, run.streak)) : (run.wrong++, run.streak = 0);
   setTimeout(() => run && (run.i >= run.n ? finish() : next()), delay);
@@ -188,7 +213,7 @@ function judge(ok, delay) {
 function answer(i) {
   if (!run || run.locked || run.state !== 'go' || i >= run.q.choices.length) return;
   const ok = i === run.q.answer, bs = stage.querySelectorAll('.ch');
-  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, explanation: run.q.explanation, chosen: run.q.choices[i], correct: run.q.choices[run.q.answer], ok });
+  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, family: run.q.family, explanation: run.q.explanation, chosen: run.q.choices[i], correct: run.q.choices[run.q.answer], ok });
   bs[run.q.answer].classList.add('ok'); if (!ok) bs[i].classList.add('bad');
   judge(ok, ok ? 220 : 800);
 }
@@ -197,7 +222,7 @@ function submit(v) {
   const norm = x => String(x).trim().replace(/[−–]/g, '-').replace(/\s+/g, '').toLowerCase();
   const right = run.q.choices[run.q.answer], ok = norm(v) === norm(right), a = $('#ans');
   a.disabled = true; a.classList.add(ok ? 'ok' : 'bad'); if (!ok) $('#rev').textContent = 'Answer: ' + right;
-  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, explanation: run.q.explanation, chosen: v, correct: right, ok });
+  run.answers.push({ q: run.q.q, seq: run.q.seq, fullSeq: run.q.fullSeq, position: run.q.position, topic: run.q.topic, family: run.q.family, explanation: run.q.explanation, chosen: v, correct: right, ok });
   judge(ok, ok ? 220 : 1100);
 }
 function finish() {
@@ -206,21 +231,43 @@ function finish() {
   const prev = db.sessions.filter(s => s.n === run.n), pb = !prev.length || final < Math.min(...prev.map(s => s.final));
   db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, answers: run.answers }); save();
   const rows = Object.entries(run.by).map(([id, b]) => `<div class="row" style="grid-template-columns:1fr 60px 60px"><span>${TOPICS[id]?.label || id}</span><span class="m">${Math.round(b.c / b.n * 100)}%</span><span class="m">${(b.ms / b.n / 1000).toFixed(1)}s</span></div>`).join('');
-  const review = run.answers.map((a, i) => `<details class="review ${a.ok ? 'right' : 'wrong'}" ${a.ok ? '' : 'open'}><summary><b>${i + 1}.</b> ${a.ok ? 'Correct' : 'Incorrect'} · ${TOPICS[a.topic]?.label || a.topic}</summary><div>${a.fullSeq ? `<p class="review-seq">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'position-gap' : ''}">${p === a.position ? a.correct : x}<small>P${p + 1}</small></span>`).join('')}</p><p class="position-note">Position ${a.position + 1} was the missing value.</p><details class="steps"><summary>Show solution steps</summary><p class="formula">${esc(a.explanation?.formula || 'Sequence rule')}</p><ol>${(a.explanation?.steps || []).map(step => `<li>${esc(step)}</li>`).join('')}</ol></details>` : `<p>${esc(a.q)}</p>`}<p>Your answer: <strong>${esc(a.chosen)}</strong><br>Correct answer: <strong>${esc(a.correct)}</strong></p></div></details>`).join('');
+  const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok ? 'right' : 'wrong'}" data-review="${i}"><span class="card-number">${a.ok ? '✓' : '×'}</span><span><b>Q${i + 1} · ${a.ok ? 'Correct' : 'Incorrect'}</b><small>${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
   stage.innerHTML = `<div class="clock animate-in ${pb ? 'pb' : ''}">${fmt(final)}</div>
   <p class="meta">${pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · ${fmt(total)} + ${run.wrong} × 2s</p>
   <div class="result-grid"><div><span>Accuracy</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>Avg / Q</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>Best streak</span><b>${run.best}</b></div></div>
-  <div style="width:min(600px,100%)">${rows}</div><section class="review-wrap"><h3>Answer review</h3>${review}</section>
+  <div style="width:min(600px,100%)">${rows}</div><section class="review-layout"><div class="review-list"><h3>Answer review</h3>${cards}</div><aside class="solution-pane" id="solutionPane"><div class="solution-empty">Select an answer card to inspect its solution.</div></aside></section>
   <div class="actions"><button class="btn-primary" id="again">Again</button><button class="btn-secondary" id="home">Home</button></div>`;
+  const openSolution = index => {
+    const a = run.answers[index], pane = $('#solutionPane');
+    stage.classList.add('solution-focus');
+    stage.querySelectorAll('.review-card').forEach(item => item.classList.remove('selected'));
+    stage.querySelector(`[data-review="${index}"]`).classList.add('selected');
+    pane.classList.remove('solution-in'); void pane.offsetWidth; pane.classList.add('solution-in');
+    pane.innerHTML = `<div class="solution-head"><div><span class="eyebrow">${a.ok ? 'Correct response' : 'Incorrect response'}</span><h2>Question ${index + 1}</h2></div><span class="solution-status ${a.ok ? 'good' : 'bad'}">${a.ok ? '✓' : '×'}</span></div>
+      <p class="solution-topic">${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')}</p>
+      ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="notation"><span>n = position number</span><strong>f(n) = function of n</strong></div><div class="math-block">${math(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><code>${math(step)}</code></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
+      <div class="answer-compare"><span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span><span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
+      <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
+    pane.querySelector('.tag-action').onclick = () => {
+      const tag = prompt('Name this function tag', a.family || a.topic);
+      if (!tag?.trim()) return;
+      const name = tag.trim(); db.tags[name] = [...new Set([...(db.tags[name] || []), a.family || a.topic])]; save(); renderDash();
+      pane.querySelector('.tag-action').textContent = `✓ Saved as ${name}`;
+    };
+  };
+  stage.querySelectorAll('.review-card').forEach((card, i) => card.onclick = () => openSolution(i));
   run.state = 'done'; $('#again').onclick = start; $('#home').onclick = quit; $('#again').focus();
 }
-function quit() { cancelAnimationFrame(raf); run = null; stage.hidden = true; stage.innerHTML = ''; document.body.classList.remove('focus'); renderDash(); }
+function quit() { cancelAnimationFrame(raf); run = null; stage.classList.remove('solution-focus'); stage.hidden = true; stage.innerHTML = ''; document.body.classList.remove('focus'); renderDash(); }
 
 /* ============ SETTINGS + INPUT ============ */
 const layout = $('#layout'), toggleSettings = () => layout.classList.toggle('settings-open'), closeSettings = () => layout.classList.remove('settings-open');
 $('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = start;
 $('#selMode').value = db.settings.mode || 'choice'; $('#selMode').onchange = e => { db.settings.mode = e.target.value; save(); };
 $('#selDifficulty').value = db.settings.difficulty || 'mixed'; $('#selDifficulty').onchange = e => { db.settings.difficulty = e.target.value; save(); };
+$('#selComposition').value = db.settings.composition || 'balanced'; $('#selComposition').onchange = e => { db.settings.composition = e.target.value; save(); };
+$('#chkTraining').checked = !!db.settings.training; $('#chkTraining').onchange = e => { db.settings.training = e.target.checked; save(); renderDash(); };
+$('#selTagFilter').onchange = e => { db.settings.tagFilter = e.target.value; save(); };
 $('#selStatFilter').value = db.settings.statFilter || 'all'; $('#selStatFilter').onchange = e => { db.settings.statFilter = e.target.value; save(); renderDash(); };
 const presetCounts = new Set(['5', '10', '20', '30', '50']), customN = $('#customN');
 const syncQuestionCount = () => {
