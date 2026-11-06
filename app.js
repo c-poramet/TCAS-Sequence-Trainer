@@ -344,7 +344,7 @@ function pick() {
   if (db.settings.difficulty === 'mixed' && db.settings.composition === 'balanced') ids = ids.filter(id => id !== 'entangled');
   if (db.settings.difficulty === 'mixed' && db.settings.composition === 'light') ids = ids.filter(id => id !== 'entangled' && id !== 'pow');
   if (!ids.length) ids = enabled();
-  const w = ids.map(weight); let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  const w = ids.map(weight); let r = randomValue() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < ids.length; i++) if ((r -= w[i]) <= 0) return TOPICS[ids[i]].gen();
   return TOPICS[ids[0]].gen();
 }
