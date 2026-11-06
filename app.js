@@ -283,17 +283,36 @@ function finish() {
       ${a.fullSeq ? `<div class="solution-sequence">${a.fullSeq.map((x, p) => `<span class="${p === a.position ? 'missing' : ''}">${p === a.position ? esc(a.correct) : x}<small>P${p + 1}</small></span>`).join('')}</div><p class="position-note">The missing value was position ${a.position + 1}.</p><div class="math-block">${formulaMarkup(a.explanation?.formula || 'Sequence rule')}</div><ol class="solution-steps">${(a.explanation?.steps || []).map((step, s) => `<li style="--step:${s}"><span>${s + 1}</span><span class="math-step">\\(${latex(step)}\\)</span></li>`).join('')}</ol>` : `<p class="math-block">${esc(a.q)}</p>`}
       <div class="answer-compare"><span>Your answer<strong class="${a.ok ? 'correct-text' : 'incorrect-text'}">${esc(a.chosen)}</strong></span><span>Correct answer<strong>${esc(a.correct)}</strong></span></div>
       <button class="tag-action" data-tag-family="${esc(a.topic)}">＋ Save function tag</button>`;
-    pane.querySelector('.tag-action').onclick = () => {
-      const tag = prompt('Name this function tag', a.family || a.topic);
-      if (!tag?.trim()) return;
-      const name = tag.trim(); db.tags[name] = [...new Set([...(db.tags[name] || []), a.family || a.topic])]; save(); renderDash();
-      pane.querySelector('.tag-action').textContent = `✓ Saved as ${name}`;
-    };
+    pane.querySelector('.tag-action').onclick = () => openTagDialog(a.family || a.topic, pane.querySelector('.tag-action'));
     if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise([pane]);
   };
   stage.querySelectorAll('.review-card').forEach((card, i) => card.onclick = () => openSolution(i));
   run.state = 'done'; $('#again').onclick = start; $('#home').onclick = quit; $('#again').focus();
 }
+let tagContext = null;
+function openTagDialog(family, button) {
+  tagContext = { family, button };
+  const dialog = $('#tagDialog');
+  $('#tagName').value = family;
+  dialog.hidden = false;
+  requestAnimationFrame(() => { $('#tagName').focus(); $('#tagName').select(); });
+}
+function closeTagDialog() {
+  $('#tagDialog').hidden = true;
+  tagContext = null;
+}
+$('#tagForm').onsubmit = e => {
+  e.preventDefault();
+  const name = $('#tagName').value.trim();
+  if (!name || !tagContext) return;
+  db.tags[name] = [...new Set([...(db.tags[name] || []), tagContext.family])];
+  save(); renderDash();
+  tagContext.button.textContent = `✓ Saved as ${name}`;
+  closeTagDialog();
+};
+$('#tagCancel').onclick = closeTagDialog;
+$('#tagCancelSecondary').onclick = closeTagDialog;
+$('#tagDialog').onclick = e => { if (e.target === e.currentTarget) closeTagDialog(); };
 function quit() { cancelAnimationFrame(raf); run = null; stage.classList.remove('solution-focus'); stage.hidden = true; stage.innerHTML = ''; document.body.classList.remove('focus'); renderDash(); }
 
 /* ============ SETTINGS + INPUT ============ */
@@ -330,6 +349,10 @@ $('#btnReset').onclick = () => { if (confirm('Erase all stats and settings?')) {
 
 addEventListener('keydown', e => {
   if (e.target.matches('select,input[type=range],.ans-input') && e.key !== 'Escape') return;
+  if (!$('#tagDialog').hidden) {
+    if (e.key === 'Escape') closeTagDialog();
+    return;
+  }
   if (run) {
     if (e.key === 'Escape') return quit();
     if (e.code === 'Space') { e.preventDefault(); if (run.state === 'ready') begin(); else if (run.state === 'done') start(); }

@@ -28,12 +28,16 @@
     <div class="app-content">
       <div class="solver-layout">
         <section class="panel left-panel">
+          <div class="quick-start">
+            <label class="lbl" for="selN">Questions</label>
+            <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
+            <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
+            <button class="btn-primary mt" id="btnStart">Start · Space</button>
+            <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
+          </div>
           <details class="problem-config" id="problemConfig" open>
             <summary><span>Problem configuration</span><span class="config-chevron">⌄</span></summary>
             <div class="config-body">
-          <label class="lbl" for="selN">Questions</label>
-          <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
-          <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
           <label class="lbl mt" for="selMode">Answer mode</label>
           <div class="select-wrap"><select id="selMode"><option value="choice">Multiple choice (1–5)</option><option value="type">Type answer</option></select></div>
           <label class="lbl mt" for="selDifficulty">Difficulty</label>
@@ -45,8 +49,6 @@
           <div class="select-wrap"><select id="selTagFilter"><option value="all">All functions</option></select></div>
           <div class="panel-title mt">Topics</div>
           <div id="topicList"></div>
-          <button class="btn-primary mt" id="btnStart">Start · Space</button>
-            <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
             </div>
           </details>
         </section>
@@ -76,6 +78,15 @@
 <footer class="footer">Data is stored only in this browser (localStorage).</footer>
 
 <div class="stage" id="stage" hidden></div>
+<div class="tag-dialog-backdrop" id="tagDialog" hidden>
+  <form class="tag-dialog" id="tagForm">
+    <div class="tag-dialog-head"><div><span class="eyebrow">Save for practice</span><h2>Label this function</h2></div><button class="icon-btn" type="button" id="tagCancel" aria-label="Close tag dialog">✕</button></div>
+    <p class="tag-dialog-copy">Create a short label so you can practice this function later.</p>
+    <label class="lbl" for="tagName">Tag name</label>
+    <input id="tagName" class="tag-input" type="text" maxlength="32" autocomplete="off" placeholder="e.g. quadratic patterns" required>
+    <div class="tag-dialog-actions"><button class="btn-secondary" type="button" id="tagCancelSecondary">Cancel</button><button class="btn-primary" type="submit">Save tag</button></div>
+  </form>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
