@@ -166,9 +166,23 @@ const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label, icon]
   gen() { const p = BANK.filter(b => b.topic === t), it = p[rnd(0, p.length - 1)], ans = it.choices[it.answer], c = shuffle([...it.choices]);
     return { topic: 'bank:' + t, q: it.q, choices: c, answer: c.indexOf(ans) }; } });
 
+const questionKey = q => JSON.stringify([q.topic, q.family, q.q, q.position ?? null, q.fullSeq || null]);
+function nextUniqueQuestion(seen) {
+    let q;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      q = pick();
+      if (!seen.has(questionKey(q))) {
+        seen.add(questionKey(q));
+        return q;
+      }
+    }
+    // Keep the requested question count even when a narrow custom filter has a small pool.
+    return q;
+}
 function exportPracticePdf() {
-    const count = Math.max(1, Math.min(50, Number(db.settings.n) || 10));
-    const questions = Array.from({ length: count }, () => pick());
+      const count = Math.max(1, Math.min(50, Number(db.settings.n) || 10));
+      const seen = new Set();
+      const questions = Array.from({ length: count }, () => nextUniqueQuestion(seen));
     const questionBlocks = questions.map((q, index) => {
       const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
       return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div></article>`;
@@ -268,7 +282,7 @@ let run = null, raf = 0;
 const stage = $('#stage');
 function start() {
   if (!enabled().length) return;
-  run = { n: db.settings.n, i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], q: null, locked: false, state: 'ready' };
+  run = { n: db.settings.n, i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], seen: new Set(), q: null, locked: false, state: 'ready' };
   stage.classList.remove('solution-focus');
   document.body.classList.add('focus'); stage.hidden = false; closeSettings();
   stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Esc to cancel</p>`;
@@ -276,7 +290,7 @@ function start() {
 function begin() { run.state = 'go'; run.t0 = performance.now(); tick(); next(); }
 function tick() { const c = $('#clock'); if (c) c.textContent = fmt(performance.now() - run.t0); raf = requestAnimationFrame(tick); }
 function next() {
-  run.q = pick(); run.locked = false; run.qt = performance.now();
+  run.q = nextUniqueQuestion(run.seen); run.locked = false; run.qt = performance.now();
   run.recent.push(run.q.family || run.q.topic); if (run.recent.length > 2) run.recent.shift();
   const q = run.q, typed = db.settings.mode === 'type';
   const body = q.seq ? `<div class="seq animate-in">${q.seq.map(x => `<i class="${x === null ? 'gap' : ''}">${x === null ? '?' : x}</i>`).join('')}</div>` : `<div class="q animate-in">${q.q}</div>`;
