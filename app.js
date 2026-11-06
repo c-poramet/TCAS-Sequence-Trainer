@@ -254,7 +254,7 @@ function nextUniqueQuestion(seen) {
     return q;
 }
 function exportPracticePdf() {
-      const count = Math.max(1, Math.min(50, Number(db.settings.n) || 10));
+      const count = Math.max(1, Math.floor(Number(db.settings.n) || 10));
       const seen = new Set();
       const questions = Array.from({ length: count }, () => nextUniqueQuestion(seen));
     const questionBlocks = questions.map((q, index) => {
