@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCAS Sequence Trainer · Developer Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="header"><a class="brand dev-brand" href="index.html">TCAS SEQUENCE TRAINER</a><span class="ctx">Developer lab</span><a class="dev-link" href="index.html">TRAINER</a></header>
+<main class="main dev-main">
+  <section class="dev-hero"><span class="eyebrow">Internal tools</span><h1>Function laboratory</h1><p>Inspect every generator, preview examples, and test local training data without changing the learner flow.</p></section>
+  <div class="dev-grid">
+    <section class="panel dev-controls">
+      <div class="panel-title">Generator controls</div>
+      <label class="lbl" for="devFamily">Function family</label><div class="select-wrap"><select id="devFamily"></select></div>
+      <label class="lbl mt" for="devDifficulty">Difficulty preset</label><div class="select-wrap"><select id="devDifficulty"><option>mixed</option><option>hard</option><option>expert</option></select></div>
+      <label class="lbl mt" for="devCount">Sequence length</label><input id="devCount" class="custom-count" type="number" min="3" max="20" value="6">
+      <button class="btn-primary mt" id="generate">Generate preview</button>
+      <button class="btn-secondary mt" id="generateAll">Generate all examples</button>
+      <div class="panel-title mt">Storage tools</div>
+      <button class="btn-secondary" id="exportData">Export local data</button>
+      <button class="btn-secondary mt" id="clearData">Clear local data</button>
+      <p class="hint" id="storageStatus"></p>
+    </section>
+    <section class="panel dev-preview"><div class="panel-title">Live preview</div><div id="preview"></div></section>
+  </div>
+  <section class="panel catalog"><div class="panel-title">All function families <span id="catalogCount"></span></div><div id="catalogList"></div></section>
+</main>
+<script src="dev.js"></script>
+</body>
+</html>

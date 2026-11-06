@@ -1,4 +1,4 @@
-# Sprint · Exam Trainer
+# TCAS Sequence Trainer
 
 A browser-based sequence and function trainer for entrance-exam practice. The app is a dependency-free vanilla HTML/CSS/JavaScript project and stores progress locally in the browser.
 
@@ -78,7 +78,7 @@ The dashboard also shows:
 
 ## Data and privacy
 
-All settings, statistics, schedules, tags, and session records are stored in `localStorage` under the `sprint-exam-v1` key. No data is sent to a server.
+All settings, statistics, schedules, tags, and session records are stored locally in the browser. No data is sent to a server.
 
 Use **Erase all local data** in Settings to clear the saved trainer data.
 
@@ -87,3 +87,18 @@ Use **Erase all local data** in Settings to clear the saved trainer data.
 - [index.html](./index.html) — application layout and controls
 - [app.js](./app.js) — question generation, scoring, storage, training scheduling, and review UI
 - [style.css](./style.css) — visual design, animations, responsive layout, and solution inspector styling
+- [dev.html](./dev.html) — developer lab with generator controls, examples, and storage tools
+- [dev.js](./dev.js) — developer catalog and preview tooling
+- [favicon.svg](./favicon.svg) — blue triangle application icon (`#145498`)
+
+## Developer lab
+
+Open [dev.html](./dev.html) to use the internal developer tools:
+
+- Browse all 20 sequence/function families.
+- View a formula and example sequence for each family.
+- Select a family and difficulty preset for a live preview.
+- Animate the complete function catalog into view.
+- Inspect local session, topic, and tag counts.
+- Export the current `localStorage` data as JSON.
+- Clear local trainer data while testing a clean state.
