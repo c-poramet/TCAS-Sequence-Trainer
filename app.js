@@ -2,7 +2,19 @@
 /* ============ QUESTION ENGINE ============
    Each sequence family returns 6 integers (position i = 0..5). Add a family = add one line to FAM, then list it in GROUPS.
    Fixed questions: BANK.push({topic:'Verbal', q:'...', choices:[...], answer:index}) */
-const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a, pk = a => a[rnd(0, a.length - 1)], sg = () => rnd(0, 1) ? 1 : -1;
+let activeRng = null;
+const randomValue = () => activeRng ? activeRng() : Math.random();
+const makeRng = seed => {
+  let state = (Number(seed) >>> 0) || 1;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+};
+const withRng = (rng, work) => { const previous = activeRng; activeRng = rng; try { return work(); } finally { activeRng = previous; } };
+const newSeed = () => Math.floor(Math.random() * 2147483646) + 1;
+const normalizeSeed = value => { const n = Math.floor(Number(value)); return Number.isFinite(n) && n > 0 ? Math.min(2147483647, n) : 0; };
+const rnd = (a, b) => Math.floor(randomValue() * (b - a + 1)) + a, pk = a => a[rnd(0, a.length - 1)], sg = () => rnd(0, 1) ? 1 : -1;
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function mcq(topic, q, ans, near) {
   const s = new Set([ans]); let g = 0;
@@ -255,8 +267,8 @@ function nextUniqueQuestion(seen) {
 }
 function exportPracticePdf() {
       const count = Math.max(1, Math.floor(Number(db.settings.n) || 10));
-      const seen = new Set();
-      const questions = Array.from({ length: count }, () => nextUniqueQuestion(seen));
+      const seed = newSeed(), seen = new Set();
+      const questions = withRng(makeRng(seed), () => Array.from({ length: count }, () => nextUniqueQuestion(seen)));
     const questionBlocks = questions.map((q, index) => {
       const choices = q.choices?.map((choice, choiceIndex) => `<span><b>${choiceIndex + 1}</b>${esc(choice)}</span>`).join('') || '<span class="answer-line">Answer: ____________________</span>';
       return `<article class="pdf-question"><h2>Question ${index + 1}</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p><p class="sequence-question">${esc(q.q)}</p><div class="pdf-choices">${choices}</div></article>`;
@@ -264,11 +276,12 @@ function exportPracticePdf() {
     const solutionBlocks = questions.map((q, index) => `<article class="pdf-solution"><h2>Question ${index + 1} solution</h2><p class="topic">${esc(TOPICS[q.topic]?.label || q.topic)} · ${esc(q.family || 'sequence')}</p>${q.fullSeq ? `<div class="pdf-sequence">${q.fullSeq.map((value, position) => `<span class="${position === q.position ? 'missing' : ''}"><b>P${position + 1}</b>${value}</span>`).join('')}</div><div class="pdf-formula">${formulaMarkup(q.explanation?.formula || 'Sequence rule')}</div><ol>${(q.explanation?.steps || []).map(step => `<li>\\(${latex(step)}\\)</li>`).join('')}</ol><p class="pdf-answer">Correct answer: <strong>${esc(q.correct || q.choices?.[q.answer] || '')}</strong></p>` : `<p>${esc(q.q)}</p>`}</article>`).join('');
     const printWindow = window.open('', '_blank');
     if (!printWindow) { alert('Please allow pop-ups to generate the PDF.'); return; }
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(String(seed))}`;
     printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>TCAS Sequence Trainer · Practice Sheet</title>
       <style>
-        @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
+        @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:13px Arial,sans-serif}h1{margin:0 0 5px;font:700 25px Georgia,serif}h2{margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #c8d1da;font:700 17px Georgia,serif}.meta,.topic{color:#5d6872}.meta{margin:0 0 20px}.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.seed{margin:8px 0 0;font:700 15px monospace;color:#145498}.seed-qr{width:90px;height:90px;image-rendering:auto}.pdf-question,.pdf-solution{page-break-inside:avoid;border:1px solid #d5dce2;border-radius:7px;padding:12px 14px;margin:0 0 12px}.sequence-question{margin:10px 0 14px;font:700 15px monospace;letter-spacing:.02em}.pdf-choices{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pdf-choices span{min-height:32px;padding:8px;border:1px solid #c6ced5;border-radius:5px;font:12px monospace}.pdf-choices b{display:block;color:#145498;font-size:9px;margin-bottom:3px}.answer-line{grid-column:1/-1}.solutions{page-break-before:always}.pdf-sequence{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pdf-sequence span{position:relative;display:grid;place-items:center;min-width:52px;min-height:42px;padding:11px 7px 15px;border:1px solid #bcc6cf;border-radius:5px;font:700 15px monospace}.pdf-sequence span b{position:absolute;bottom:2px;color:#6b7680;font:8px monospace}.pdf-sequence .missing{border:2px solid #c97f50;color:#c97f50}.pdf-formula{padding:9px 12px;border-left:3px solid #145498;background:#f2f5f8;font-size:16px;line-height:1.55}.formula-row{display:block}.pdf-solution ol{margin:10px 0;padding-left:28px}.pdf-solution li{padding:6px 0;border-bottom:1px solid #e1e5e8;page-break-inside:avoid}.pdf-answer{margin:12px 0 0}.footer{margin-top:20px;color:#7a858d;font-size:10px}@media print{.solutions{page-break-before:always}.pdf-question,.pdf-solution{break-inside:avoid}}
       </style><script>window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-      </head><body><header><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions · ${esc(db.settings.difficulty)} difficulty · ${esc(db.settings.composition)} composition</p></header><main><section>${questionBlocks}</section><section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section></main><p class="footer">Generated from the trainer settings. Print or save this page as PDF.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
+      </head><body><header class="pdf-header"><div><h1>TCAS Sequence Trainer</h1><p class="meta">Practice sheet · ${count} questions · ${esc(db.settings.difficulty)} difficulty · ${esc(db.settings.composition)} composition</p><p class="seed">Seed: <strong>${seed}</strong></p></div><img class="seed-qr" src="${qrUrl}" alt="QR code for seed ${seed}"></header><main><section>${questionBlocks}</section><section class="solutions"><h1>Solutions</h1><p class="meta">Use the positional substitutions to check each answer.</p>${solutionBlocks}</section></main><p class="footer">Generated from the trainer settings. Enter the seed in the trainer to reproduce this exact question set.</p><script>window.addEventListener('load',()=>{const wait=()=>window.MathJax?.startup?.promise?window.MathJax.startup.promise.then(()=>window.print()):setTimeout(wait,100);wait()});</script></body></html>`);
     printWindow.document.close();
 }
 
@@ -354,17 +367,18 @@ function renderTopics() {
 /* ============ RUN (focus mode) ============ */
 let run = null, raf = 0;
 const stage = $('#stage');
-function start() {
+function start(seedValue) {
   if (!enabled().length) return;
-  run = { n: db.settings.n, i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], seen: new Set(), q: null, locked: false, state: 'ready' };
+  const seed = normalizeSeed(seedValue || newSeed());
+  run = { n: db.settings.n, seed, rng: makeRng(seed), i: 0, c: 0, wrong: 0, streak: 0, best: 0, t0: 0, qt: 0, by: {}, answers: [], recent: [], seen: new Set(), q: null, locked: false, state: 'ready' };
   stage.classList.remove('solution-focus');
   document.body.classList.add('focus'); stage.hidden = false; closeSettings();
-  stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Esc to cancel</p>`;
+  stage.innerHTML = `<div class="clock idle" id="clock">0.00</div><p class="meta">Press <b>SPACE</b> to begin · ${run.n} questions · Seed <b>${run.seed}</b> · Esc to cancel</p>`;
 }
 function begin() { run.state = 'go'; run.t0 = performance.now(); tick(); next(); }
 function tick() { const c = $('#clock'); if (c) c.textContent = fmt(performance.now() - run.t0); raf = requestAnimationFrame(tick); }
 function next() {
-  run.q = nextUniqueQuestion(run.seen); run.locked = false; run.qt = performance.now();
+  run.q = withRng(run.rng, () => nextUniqueQuestion(run.seen)); run.locked = false; run.qt = performance.now();
   run.recent.push(run.q.family || run.q.topic); if (run.recent.length > 2) run.recent.shift();
   const q = run.q, typed = db.settings.mode === 'type';
   const body = q.seq ? `<div class="seq animate-in">${q.seq.map(x => `<i class="${x === null ? 'gap' : ''}">${x === null ? '?' : x}</i>`).join('')}</div>` : `<div class="q animate-in">${q.q}</div>`;
@@ -406,11 +420,11 @@ function finish() {
   cancelAnimationFrame(raf);
   const total = performance.now() - run.t0, final = total + run.wrong * 2000;
   const prev = db.sessions.filter(s => s.n === run.n), pb = !prev.length || final < Math.min(...prev.map(s => s.final));
-  db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, answers: run.answers }); save();
+  db.sessions.push({ d: Date.now(), n: run.n, c: run.c, wrong: run.wrong, total, final, seed: run.seed, answers: run.answers }); save();
   const rows = Object.entries(run.by).map(([id, b]) => `<div class="row" style="grid-template-columns:1fr 60px 60px"><span>${TOPICS[id]?.label || id}</span><span class="m">${Math.round(b.c / b.n * 100)}%</span><span class="m">${(b.ms / b.n / 1000).toFixed(1)}s</span></div>`).join('');
   const cards = run.answers.map((a, i) => `<button class="review-card ${a.ok ? 'right' : 'wrong'}" data-review="${i}"><span class="card-number">${a.ok ? '✓' : '×'}</span><span><b>Q${i + 1} · ${a.ok ? 'Correct' : 'Incorrect'}</b><small>${esc(TOPICS[a.topic]?.label || a.topic)} · ${esc(a.family || 'sequence')} · ⏱ ${fmt(a.time || 0)}</small></span><span class="card-arrow">→</span></button>`).join('');
   stage.innerHTML = `<div class="clock animate-in ${pb ? 'pb' : ''}">${fmt(final)}</div>
-  <p class="meta">${pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · ${fmt(total)} + ${run.wrong} × 2s</p>
+  <p class="meta">${pb ? '<b class="pb">NEW PERSONAL BEST</b>' : 'Final time'} · ${fmt(total)} + ${run.wrong} × 2s · Seed <b>${run.seed}</b></p>
   <div class="result-grid"><div><span>Accuracy</span><b>${Math.round(run.c / run.n * 100)}%</b></div><div><span>Avg / Q</span><b>${(total / run.n / 1000).toFixed(2)}s</b></div><div><span>Best streak</span><b>${run.best}</b></div></div>
   <div style="width:min(600px,100%)">${rows}</div><section class="review-layout"><div class="review-list"><h3>Answer review</h3>${cards}</div><aside class="solution-pane" id="solutionPane"><div class="solution-empty">Select an answer card to inspect its solution.</div></aside></section>
   <div class="actions"><button class="btn-primary" id="again">Again</button><button class="btn-secondary" id="home">Home</button></div>`;
@@ -459,7 +473,28 @@ function quit() { cancelAnimationFrame(raf); run = null; stage.classList.remove(
 
 /* ============ SETTINGS + INPUT ============ */
 const layout = $('#layout'), toggleSettings = () => layout.classList.toggle('settings-open'), closeSettings = () => layout.classList.remove('settings-open');
-$('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = start; $('#btnPdf').onclick = exportPracticePdf;
+$('#btnSet').onclick = toggleSettings; $('#btnClose').onclick = closeSettings; $('#btnStart').onclick = () => start();
+$('#btnSeedStart').onclick = () => {
+  const seed = normalizeSeed($('#seedInput').value);
+  if (!seed) { $('#seedInput').focus(); return; }
+  start(seed);
+};
+$('#qrInput').onchange = async e => {
+  const file = e.target.files?.[0]; e.target.value = '';
+  if (!file) return;
+  if (!('BarcodeDetector' in window)) { alert('QR scanning is not supported in this browser. Enter the seed number printed beside the QR code.'); return; }
+  try {
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    const codes = await detector.detect(await createImageBitmap(file));
+    const seed = codes[0]?.rawValue?.match(/\d+/)?.[0];
+    if (!seed) throw new Error('No numeric seed found');
+    $('#seedInput').value = normalizeSeed(seed);
+    start(seed);
+  } catch (error) {
+    alert(`Could not read a numeric seed from that QR code: ${error.message}`);
+  }
+};
+$('#btnPdf').onclick = exportPracticePdf;
 $('#selMode').value = db.settings.mode || 'choice'; $('#selMode').onchange = e => { db.settings.mode = e.target.value; save(); };
 $('#selDifficulty').value = db.settings.difficulty || 'mixed'; $('#selDifficulty').onchange = e => { db.settings.difficulty = e.target.value; save(); };
 $('#selComposition').value = db.settings.composition || 'balanced'; $('#selComposition').onchange = e => { db.settings.composition = e.target.value; save(); };

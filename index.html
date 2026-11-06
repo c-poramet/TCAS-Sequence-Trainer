@@ -34,6 +34,12 @@
             <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
             <button class="btn-primary mt" id="btnStart">Start · Space</button>
             <button class="btn-secondary mt" id="btnPdf">Export practice PDF</button>
+            <div class="seed-tools">
+              <label class="lbl mt" for="seedInput">Seeded set</label>
+              <div class="seed-entry"><input id="seedInput" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter seed number"><button class="btn-secondary" id="btnSeedStart" type="button">Start seed</button></div>
+              <label class="btn-secondary qr-upload" for="qrInput">Read QR code<input id="qrInput" type="file" accept="image/*" capture="environment" hidden></label>
+              <p class="hint">Use the seed printed at the top of a practice PDF to reproduce its exact question set.</p>
+            </div>
             <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
           </div>
           <details class="problem-config" id="problemConfig" open>
