@@ -57,7 +57,7 @@ const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label]]) => 
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
-let db = { topics: {}, sessions: [], settings: { n: 20, scale: 1, mode: 'choice', off: [] } };
+let db = { topics: {}, sessions: [], settings: { n: 10, scale: 1, mode: 'choice', off: [] } };
 try { const x = JSON.parse(localStorage.getItem(KEY)); if (x) db = { ...db, ...x, settings: { ...db.settings, ...x.settings } }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
 
