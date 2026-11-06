@@ -104,7 +104,7 @@ const TOPICS = Object.fromEntries(Object.entries(GROUPS).map(([id, [label, icon]
 
 /* ============ STORAGE ============ */
 const KEY = 'sprint-exam-v1';
-let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', off: [], statFilter: 'all' } };
+let db = { topics: {}, sessions: [], tags: {}, settings: { n: 10, scale: 1, mode: 'choice', difficulty: 'mixed', composition: 'balanced', training: false, tagFilter: 'all', configOpen: true, off: [], statFilter: 'all' } };
 try { const x = JSON.parse(localStorage.getItem(KEY)); if (x) db = { ...db, ...x, settings: { ...db.settings, ...x.settings } }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
 
@@ -274,6 +274,8 @@ $('#selDifficulty').value = db.settings.difficulty || 'mixed'; $('#selDifficulty
 $('#selComposition').value = db.settings.composition || 'balanced'; $('#selComposition').onchange = e => { db.settings.composition = e.target.value; save(); };
 $('#chkTraining').checked = !!db.settings.training; $('#chkTraining').onchange = e => { db.settings.training = e.target.checked; save(); renderDash(); };
 $('#selTagFilter').onchange = e => { db.settings.tagFilter = e.target.value; save(); };
+$('#problemConfig').open = db.settings.configOpen !== false;
+$('#problemConfig').ontoggle = e => { db.settings.configOpen = e.target.open; save(); };
 $('#selStatFilter').value = db.settings.statFilter || 'all'; $('#selStatFilter').onchange = e => { db.settings.statFilter = e.target.value; save(); renderDash(); };
 const presetCounts = new Set(['5', '10', '20', '30', '50']), customN = $('#customN');
 const syncQuestionCount = () => {

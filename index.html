@@ -28,7 +28,9 @@
     <div class="app-content">
       <div class="solver-layout">
         <section class="panel left-panel">
-          <div class="panel-title">Session</div>
+          <details class="problem-config" id="problemConfig" open>
+            <summary><span>Problem configuration</span><span class="config-chevron">⌄</span></summary>
+            <div class="config-body">
           <label class="lbl" for="selN">Questions</label>
           <div class="select-wrap"><select id="selN"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="custom">Custom…</option></select></div>
           <input class="custom-count" id="customN" type="number" min="1" step="1" inputmode="numeric" placeholder="Custom question count" aria-label="Custom question count" hidden>
@@ -44,7 +46,9 @@
           <div class="panel-title mt">Topics</div>
           <div id="topicList"></div>
           <button class="btn-primary mt" id="btnStart">Start · Space</button>
-          <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
+            <p class="hint">Time + 2s per wrong answer. Keys 1–5 to answer. Esc quits.</p>
+            </div>
+          </details>
         </section>
         <section class="panel right-panel">
           <div class="panel-title">Weakness analysis</div>
