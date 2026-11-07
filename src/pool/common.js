@@ -52,6 +52,8 @@ function make(base, spec) {
 const r = (rng, a, b) => rng.int(a, b);
 const signed = (x) => x < 0 ? `-${-x}` : `+${x}`;
 const add = (x, c) => c ? `${x}${signed(c)}` : x;
+const coefficient = (c, body) => c === 0 ? '' : c === 1 ? String(body) : c === -1 ? `-${body}` : `${c}${body}`;
+const polynomial = (terms) => terms.filter((term) => term && term !== '0').map((term, i) => i === 0 || term.startsWith('-') ? term : `+${term}`).join('') || '0';
 
 const COMMON_ENTRIES = [
   make({ id: 'poly.lin', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
@@ -62,7 +64,7 @@ const COMMON_ENTRIES = [
   make({ id: 'poly.quad', since: 1, tier: 1, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 0, 0], sample: (g) => [r(g, -2, 3), r(g, -2, 3), r(g, -3, 3)],
     eval: (p, n) => p[0] * n * n + p[1] * n + p[2], normalize: (p) => ({ a: p[0], b: p[1], c: p[2] }),
-    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => `${p[0]}\\cdot${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
+    latex: (p, x) => polynomial([coefficient(p[0], `${x}^{2}`), coefficient(p[1], x), String(p[2])]), detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => polynomial([coefficient(p[0], `${n}^{2}`), coefficient(p[1], n), String(p[2])]),
   }),
   make({ id: 'geo.pure', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 2], sample: (g, c) => [r(g, 1, 4), r(g, 2, 3)],
@@ -72,12 +74,12 @@ const COMMON_ENTRIES = [
   make({ id: 'poly.shift_sq', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 0], sample: (g) => [r(g, -2, 3), r(g, -3, 3)],
     eval: (p, n) => (n + p[0]) ** 2 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{2}${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=(n${signed(p[0])})^{2}`, substitute: (p, n) => `(${n}${signed(p[0])})^{2}${signed(p[1])}`,
+    latex: (p, x) => `(${x}${signed(p[0])})^{2}${signed(p[1])}`, detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{2}`, substitute: (p, n) => `(${n}${signed(p[0])})^{2}${signed(p[1])}`,
   }),
   make({ id: 'poly.shift_cube', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [0, 0], sample: (g) => [r(g, -1, 2), r(g, -2, 2)],
     eval: (p, n) => (n + p[0]) ** 3 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{3}${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=(n${signed(p[0])})^{3}`, substitute: (p, n) => `(${n}${signed(p[0])})^{3}${signed(p[1])}`,
+    latex: (p, x) => `(${x}${signed(p[0])})^{3}${signed(p[1])}`, detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{3}`, substitute: (p, n) => `(${n}${signed(p[0])})^{3}${signed(p[1])}`,
   }),
   make({ id: 'seq.triangular', since: 1, tier: 1, composable: true, arity: 1, maxIndex: 60 }, {
     fallback: [0], sample: (g) => [r(g, -2, 3)],
@@ -87,17 +89,17 @@ const COMMON_ENTRIES = [
   make({ id: 'poly.cubic', since: 1, tier: 2, composable: true, arity: 4, maxIndex: 60 }, {
     fallback: [1, 0, 0, 0], sample: (g) => [r(g, -1, 2), r(g, -2, 2), r(g, -2, 2), r(g, -2, 2)],
     eval: (p, n) => p[0] * n ** 3 + p[1] * n ** 2 + p[2] * n + p[3], normalize: (p) => ({ a: p[0], b: p[1], c: p[2], d: p[3] }),
-    latex: (p, x) => `${p[0]}${x}^{3}${signed(p[1])}${x}^{2}${signed(p[2])}${x}${signed(p[3])}`, detect: (p) => `\\Delta^{3}f(n)=${6 * p[0]}`, substitute: (p, n) => `${p[0]}${n}^{3}${signed(p[1])}${n}^{2}${signed(p[2])}${n}${signed(p[3])}`,
+    latex: (p, x) => polynomial([coefficient(p[0], `${x}^{3}`), coefficient(p[1], `${x}^{2}`), coefficient(p[2], x), String(p[3])]), detect: (p) => `\\Delta^{3}f(n)=${6 * p[0]}`, substitute: (p, n) => polynomial([coefficient(p[0], `${n}^{3}`), coefficient(p[1], `${n}^{2}`), coefficient(p[2], n), String(p[3])]),
   }),
   make({ id: 'geo.offset', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 2, 0], sample: (g) => [r(g, 1, 3), r(g, 2, 3), r(g, -3, 3)],
     eval: (p, n) => p[0] * p[1] ** (n - 1) + p[2], normalize: (p) => ({ first: p[0], ratio: p[1], add: p[2] }),
-    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}${signed(p[2])}`, detect: (p) => `\\frac{f(n+1)-${p[2]}}{f(n)-${p[2]}}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}${signed(p[2])}`,
+    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}${signed(p[2])}`, detect: (p) => `\\frac{f(n+1)${signed(-p[2])}}{f(n)${signed(-p[2])}}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}${signed(p[2])}`,
   }),
   make({ id: 'poly.nprod', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, -1, 3)],
     eval: (p, n) => n * (n + p[0]) + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `${x}(${x}${signed(p[0])})${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=n(n${signed(p[0])})`, substitute: (p, n) => `${n}(${n}${signed(p[0])})${signed(p[1])}`,
+    latex: (p, x) => `${x}(${x}${signed(p[0])})${signed(p[1])}`, detect: (p) => `f(n)${signed(-p[1])}=n(n${signed(p[0])})`, substitute: (p, n) => `${n}(${n}${signed(p[0])})${signed(p[1])}`,
   }),
   make({ id: 'seq.alt_sign', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 4), r(g, 1, 3)],
@@ -117,7 +119,7 @@ const COMMON_ENTRIES = [
   make({ id: 'poly.diff2', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 1, 0], sample: (g) => [r(g, -2, 2), r(g, -2, 2), r(g, -2, 2)],
     eval: (p, n) => p[0] * n * n + p[1] * n + p[2], normalize: (p) => ({ secondDifference: 2 * p[0], linear: p[1], add: p[2] }),
-    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => `${p[0]}${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
+    latex: (p, x) => polynomial([coefficient(p[0], `${x}^{2}`), coefficient(p[1], x), String(p[2])]), detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => polynomial([coefficient(p[0], `${n}^{2}`), coefficient(p[1], n), String(p[2])]),
   }),
   make({ id: 'seq.step3', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 3], sample: (g) => [r(g, -3, 5), r(g, 1, 4)],
