@@ -105,25 +105,26 @@ export function renderMath(el) {
 }
 
 /**
- * Render a sequence as `<ol class="seq">`. A term is blank (`?`) when it is `null`, or when its
+ * Render a sequence as a compact comma-separated list. A term is blank (`?`) when it is `null`, or when its
  * position equals `missing` and `reveal` is not set.
  * @param {(number|null)[]} terms
  * @param {{missing?:number, reveal?:boolean}} [opts]
  * @returns {HTMLElement}
  */
 export function renderSequence(terms, { missing, reveal = false } = {}) {
-  const items = terms.map((term, index) => {
+  const items = terms.flatMap((term, index) => {
     const n = index + 1;
     const isMissing = n === missing;
     const blank = term === null || term === undefined || (isMissing && !reveal);
-    return h('li', {
+    const item = h('span', {
       class: ['seq__term', isMissing ? 'seq__term--missing' : null],
       'data-n': n,
       'data-missing': isMissing ? 'true' : null,
       'data-revealed': isMissing && reveal && !blank ? 'true' : null,
     }, blank ? t('core.seq.blank') : String(term));
+    return index === 0 ? [item] : [h('span', { class: 'seq__separator', 'aria-hidden': 'true' }, ', '), item];
   });
-  return h('ol', { class: 'seq' }, items);
+  return h('p', { class: 'seq' }, items);
 }
 
 /**

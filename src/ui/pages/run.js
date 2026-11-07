@@ -1,4 +1,4 @@
-import { h, renderSequence, renderMath, renderSolution, choiceLabel, clear } from '../../core/dom.js';
+import { h, renderSequence, renderMath, renderSolution, clear } from '../../core/dom.js';
 import { t } from '../../core/i18n.js';
 import { getSetting, getGenConfig, getStatsConfig } from '../../core/settings.js';
 import { createRng, randomSeed } from '../../core/rng.js';
@@ -283,7 +283,7 @@ export function mount(container, ctx) {
         'label',
         { class: 'run__choice', 'data-index': String(i) },
         h('input', attrs),
-        h('span', { class: 'run__choice-label' }, choiceLabel(i)),
+        h('span', { class: 'run__choice-label' }, `${i + 1}.`),
         h('span', { class: 'run__choice-value' }, String(value)),
       );
     });

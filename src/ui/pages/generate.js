@@ -5,6 +5,7 @@ import { randomSeed } from '../../core/rng.js';
 import { encodeSetId, decodeSetId, isSetId, IdError } from '../../core/ids.js';
 import { SCHEMA } from '../../core/schema.js';
 import { generateSet, generateSetFromId, GenerationError } from '../../gen/generator.js';
+import { getChoices } from '../../gen/choices.js';
 import { POOL_VERSION } from '../../pool/index.js';
 import { setHandoff } from '../handoff.js';
 
@@ -109,16 +110,23 @@ function printHash(sid, answers, solutions) {
 /**
  * One list row for a question.
  * @param {{id:string, terms:number[], missing:number, mode:string}} q
+ * @param {number} number
  * @returns {HTMLElement}
  */
-function questionRow(q) {
+function questionRow(q, number) {
+  const { choices } = getChoices(q, getSetting('mcChoices'));
   return h(
     'li',
     { class: 'gen__row', 'data-qid': q.id, 'data-mode': q.mode },
-    h('a', { class: 'gen__qid', href: '#/q/' + encodeURIComponent(q.id) }, q.id),
+    h('a', { class: 'gen__qid', href: '#/q/' + encodeURIComponent(q.id) }, t('ui.generate.questionNumber', { number })),
     renderSequence(
       q.terms.map((v, i) => (i + 1 === q.missing ? null : v)),
       { missing: q.missing },
+    ),
+    h(
+      'ol',
+      { class: 'gen__choices' },
+      choices.map((value, i) => h('li', { class: 'gen__choice' }, `${i + 1}. ${value}`)),
     ),
   );
 }
@@ -331,7 +339,7 @@ export function mount(container, ctx) {
     const renderMore = () => {
       const end = Math.min(shown + PAGE_SIZE, questions.length);
       const frag = document.createDocumentFragment();
-      for (let i = shown; i < end; i += 1) frag.append(questionRow(questions[i]));
+      for (let i = shown; i < end; i += 1) frag.append(questionRow(questions[i], i + 1));
       list.append(frag);
       shown = end;
       const remaining = questions.length - shown;
