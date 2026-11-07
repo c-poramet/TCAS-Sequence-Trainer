@@ -102,7 +102,7 @@ const COMMON_ENTRIES = [
   make({ id: 'seq.alt_sign', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 4), r(g, 1, 3)],
     eval: (p, n) => (n % 2 ? 1 : -1) * (p[0] * n + p[1]), normalize: (p) => ({ multiplier: p[0], add: p[1] }),
-    latex: (p, x) => `(-1)^{${x}+1}(${p[0]}${x}${signed(p[1])})`, detect: () => `|f(n)|=${p[0] === 1 ? '' : p[0]}n${signed(p[1])}`, substitute: (p, n) => `(-1)^{${n}+1}(${p[0]}${n}${signed(p[1])})`,
+    latex: (p, x) => `(-1)^{${x}+1}(${p[0]}${x}${signed(p[1])})`, detect: (p) => `|f(n)|=${p[0] === 1 ? '' : p[0]}n${signed(p[1])}`, substitute: (p, n) => `(-1)^{${n}+1}(${p[0]}${n}${signed(p[1])})`,
   }),
   make({ id: 'rec.fib', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, 1, 3)],

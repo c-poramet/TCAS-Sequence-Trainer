@@ -61,8 +61,12 @@ export function mount(container, ctx) {
     },
     h('h2', { class: 'home__open-title' }, t('ui.home.open.title')),
     h('label', { class: 'home__label', for: 'home-id' }, t('ui.home.open.label')),
-    input,
-    h('button', { type: 'submit', class: 'home__open-button' }, t('ui.home.open.button')),
+    h(
+      'div',
+      { class: 'home__input-row' },
+      input,
+      h('button', { type: 'submit', class: 'home__open-button' }, t('ui.home.open.button')),
+    ),
     error,
   );
 

@@ -108,6 +108,9 @@ h2, h3 { font-weight: 600; line-height: 1.35; }
 .home__cta { font-weight: 600; }
 .home__open { max-width: 620px; }
 .home__open-title { font-size: 20px; }
+.home__input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
+.home__input-row .home__input { min-width: 0; }
+.home__input-row .home__open-button { height: auto; }
 
 .home__label, .lookup__label, .gen__label, .run__label, .train__label, .settings__label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
 .home__input, .lookup__input, .gen__input, .run__input, .train__input, .settings__input {
@@ -214,6 +217,36 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .train__form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .gen__legend, .train__legend { grid-column: 1 / -1; margin: 0; font-size: 20px; font-weight: 600; }
 .gen__field, .train__field { min-width: 0; }
+.train__buckets {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 16px 20px 20px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-sunken);
+}
+.train__legend { padding: 0 8px; color: var(--ink); }
+.train__bucket-list { display: grid; gap: 6px; padding: 0; margin: 4px 0 0; list-style: none; }
+.train__bucket-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  cursor: pointer;
+}
+.train__bucket-label:hover { background: var(--bg-hover); }
+.train__bucket-label:has(input:focus-visible) {
+  outline: 2px solid rgba(235, 180, 33, .4);
+  outline-offset: 1px;
+}
+.train__bucket-name { flex: 1; }
+.train__bucket-count { color: var(--ink-soft); font-size: var(--text-sm); }
+.train__note { grid-column: 1 / -1; margin: -4px 0 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.train__field { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg-raised); }
 .gen__input { min-height: 48px; padding: 10px 14px; }
 .gen__fixed { grid-column: 1 / -1; }
 .gen__submit { grid-column: 1 / -1; justify-self: center; min-width: 160px; height: 40px; }
@@ -381,8 +414,14 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .print__set-qr svg { width: 96px; height: 96px; }
 .print__head-main { min-width: 0; }
 .print__answers, .print__solutions { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
-.print__answer-list, .print__solution-list { padding-left: 28px; }
-.print__answer, .print__solution { padding: 8px 0; break-inside: avoid; }
+.print__answer-table { width: 100%; border-collapse: collapse; background: var(--bg-raised); }
+.print__answer th, .print__answer td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.print__answer th { width: 52px; color: var(--ink-soft); font-weight: 600; }
+.print__solution-list { padding-left: 28px; }
+.print__solution { padding: 8px 0; break-inside: avoid; }
+.print__solution-number { margin-bottom: 8px; color: var(--ink-soft); font-weight: 600; }
+.print__solution .solution { display: flex; flex-direction: column; }
+.print__solution .solution__answer { order: -1; margin-bottom: 16px; }
 
 .app__error { padding: 16px; border-radius: var(--radius-md); background: var(--red-soft); color: var(--red-ink); }
 
@@ -391,6 +430,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   #nav { flex-wrap: wrap; gap: 8px; }
   .nav__list { order: 3; flex-basis: 100%; overflow-x: auto; }
   #app { padding: 36px 16px 56px; }
+  .home__input-row { grid-template-columns: 1fr; }
+  .home__input-row .home__open-button { height: 40px; }
   .gen__form, .train__form, .settings__field { grid-template-columns: 1fr; }
   .gen__overview { grid-template-columns: 1fr; }
   .gen__set-qr { justify-self: start; }
@@ -430,6 +471,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   .print__set-qr svg { width: 25mm; height: 25mm; }
   .print__list { margin-top: 8mm; }
   .print__answers, .print__solutions { margin-top: 12mm; }
+  .print__answer th, .print__answer td { padding: 2mm 3mm; border-color: #D7CBB9; }
+  .print__solution .solution__answer { margin-bottom: 3mm; }
   .seq { font-size: 18px; }
   .solution__math { color: #3F2E1C; }
 }

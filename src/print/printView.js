@@ -4,7 +4,7 @@
  * (this view renders no screen-only chrome of its own).
  * @module print/printView
  */
-import { h, clear, renderSequence, renderSolution, renderMath, choiceLabel } from '../core/dom.js';
+import { h, clear, renderSequence, renderSolution, choiceLabel } from '../core/dom.js';
 import { t } from '../core/i18n.js';
 import { getSetting } from '../core/settings.js';
 import { getChoices } from '../gen/choices.js';
@@ -22,8 +22,8 @@ function maskedTerms(q) {
 
 /**
  * Render the whole set into `container` (replacing its content).
- * The DOM is assembled in a DocumentFragment and attached once; KaTeX runs once, and only
- * over the solutions section.
+ * The DOM is assembled in a DocumentFragment and attached once. Solutions render their
+ * math as they are created.
  * @param {HTMLElement} container
  * @param {{setId:string, questions:import('../gen/generator.js').Question[],
  *          options:{includeAnswers:boolean, includeSolutions:boolean, answerMode:'typed'|'mc', mcChoices:number}}} spec
@@ -58,7 +58,6 @@ export function renderPrintView(container, { setId, questions, options }) {
         'div',
         { class: 'print__q-head' },
         h('span', { class: 'print__q-number' }, `${i + 1}`),
-        h('code', { class: 'print__qid' }, q.id),
       ),
       renderSequence(maskedTerms(q), { missing: q.missing }),
       h(
@@ -89,12 +88,16 @@ export function renderPrintView(container, { setId, questions, options }) {
     fragment.appendChild(
       h('section', { class: 'print__answers' },
         h('h2', { class: 'print__heading' }, t('print.answers')),
-        h('ol', { class: 'print__answer-list' },
-          questions.map((q, i) =>
-            h('li', { class: 'print__answer', 'data-qid': q.id },
-              h('code', { class: 'print__answer-qid' }, q.id),
-              ' ',
-              h('span', { class: 'print__answer-value' }, answerText(q, i)))))),
+        h('table', { class: 'print__answer-table' },
+          h(
+            'tbody',
+            {},
+            questions.map((q, i) =>
+              h('tr', { class: 'print__answer', 'data-qid': q.id },
+                h('th', { scope: 'row' }, String(i + 1)),
+                h('td', { class: 'print__answer-value' }, answerText(q, i)))),
+          ),
+        ),
     );
   }
 
@@ -104,13 +107,12 @@ export function renderPrintView(container, { setId, questions, options }) {
     solutions = h('section', { class: 'print__solutions' },
       h('h2', { class: 'print__heading' }, t('print.solutions')),
       h('ol', { class: 'print__solution-list' },
-        questions.map((q) =>
+        questions.map((q, i) =>
           h('li', { class: 'print__solution', 'data-qid': q.id },
-            h('p', { class: 'print__qid' }, h('code', {}, q.id)),
+            h('div', { class: 'print__solution-number' }, String(i + 1)),
             renderSolution(buildSolution(q))))));
     fragment.appendChild(solutions);
   }
 
   container.appendChild(fragment);
-  if (solutions) renderMath(solutions);
 }
