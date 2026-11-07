@@ -7,6 +7,7 @@
 import { createRng } from '../core/rng.js';
 import { ALGO_VERSION, decodeQuestionId, decodeSetId, encodeQuestionId } from '../core/ids.js';
 import { t } from '../core/i18n.js';
+import { oeisDefinition } from '../pool/oeis.js';
 
 /** @typedef {{f:string, p:number[]}} Leaf */
 /** @typedef {Leaf | {o:Leaf, i:Leaf}} Expr */
@@ -566,12 +567,34 @@ export function createEngine({ pool }) {
       if (!isComposition(rule)) {
         const entry = entryOf(rule.f);
         steps.push({ key: 'gen.step.ruleDefinition', math: entry.definition(rule.p) });
+        if (entry.tier === 4) {
+          const reference = oeisDefinition(entry.id);
+          if (reference) {
+            steps.push({
+              key: 'gen.step.oeisDefinition',
+              params: { oeis: '' },
+              reference: reference.oeis,
+              math: [reference.math],
+            });
+          }
+        }
         steps.push(...entry.solve(rule.p, { points, hidden }));
       } else {
         const inner = entryOf(rule.i.f);
         const outer = entryOf(rule.o.f);
         const g = (n) => inner.evaluate(rule.i.p, n);
         steps.push({ key: 'gen.step.innerDefinition', math: innerDefinition(inner.definition(rule.i.p)) });
+        if (inner.tier === 4) {
+          const reference = oeisDefinition(inner.id);
+          if (reference) {
+            steps.push({
+              key: 'gen.step.oeisDefinition',
+              params: { oeis: '' },
+              reference: reference.oeis,
+              math: [reference.math],
+            });
+          }
+        }
         steps.push({
           key: 'gen.step.innerTable',
           math: [

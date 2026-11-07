@@ -261,6 +261,15 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   font-weight: 700;
 }
 .lookup__back:hover { background: var(--yellow); box-shadow: 0 6px 20px rgba(63, 46, 28, .16); }
+.solution__reference {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-left: 4px solid var(--tier-4);
+  border-radius: var(--radius-md);
+  background: var(--tier-4-soft);
+}
+.solution__reference .solution__text { color: var(--tier-4-ink); font-weight: 600; }
+.solution__reference-link { margin-left: 6px; color: var(--tier-4-ink); }
 @media (max-width: 600px) {
   .lookup__back { right: 16px; bottom: 16px; max-width: calc(100vw - 32px); }
 }

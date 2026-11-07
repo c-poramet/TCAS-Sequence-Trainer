@@ -186,7 +186,7 @@ export function renderSequence(terms, { missing, reveal = false } = {}) {
 
 /**
  * Render a step-by-step solution.
- * @param {{answer:number, sections:{titleKey:string, titleParams?:Record<string,string|number>, steps:{key:string, params?:Record<string,string|number>, math?:string[]}[]}[]}} solution
+ * @param {{answer:number, sections:{titleKey:string, titleParams?:Record<string,string|number>, steps:{key:string, params?:Record<string,string|number>, math?:string[], reference?:string}[]}[]}} solution
  * @returns {HTMLElement}
  */
 export function renderSolution(solution) {
@@ -194,8 +194,17 @@ export function renderSolution(solution) {
     h('section', { class: 'solution__section' },
       h('h3', { class: 'solution__title' }, t(section.titleKey, section.titleParams)),
       section.steps.map((step) =>
-        h('div', { class: 'solution__step' },
-          h('p', { class: 'solution__text' }, t(step.key, step.params)),
+        h('div', { class: ['solution__step', step.key === 'gen.step.oeisDefinition' ? 'solution__reference' : null] },
+          h('p', { class: 'solution__text' },
+            t(step.key, step.params),
+            step.reference
+              ? h('a', {
+                class: 'solution__reference-link',
+                href: `https://oeis.org/${step.reference}`,
+                target: '_blank',
+                rel: 'noreferrer',
+              }, `OEIS ${step.reference}`)
+              : null),
           (step.math ?? []).map((line) => h('div', { class: 'solution__math' }, `$$${line}$$`))))));
   const root = h('div', { class: 'solution' },
     sections,

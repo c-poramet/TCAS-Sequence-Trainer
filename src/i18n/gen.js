@@ -19,6 +19,7 @@ registerStrings('en', {
     'This sequence mixes two rules: one for odd positions and one for even positions. Splitting the terms by position:',
   'gen.step.points': 'Known terms for this rule:',
   'gen.step.ruleDefinition': 'The rule that fits these terms is defined as follows (derivation below):',
+  'gen.step.oeisDefinition': 'Standard sequence definition{oeis}:',
   'gen.step.innerDefinition':
     'This rule is a composition $a_n = f(g(n))$. First, the inner function $g$:',
   'gen.step.innerTable': 'Values of the inner function $g(n)$ at the known positions:',
@@ -47,6 +48,7 @@ registerStrings('th', {
     'ลำดับนี้ผสมกฎสองข้อ ข้อหนึ่งใช้กับตำแหน่งคี่ อีกข้อหนึ่งใช้กับตำแหน่งคู่ เมื่อแยกพจน์ตามตำแหน่งจะได้:',
   'gen.step.points': 'พจน์ที่ทราบค่าของกฎข้อนี้:',
   'gen.step.ruleDefinition': 'กฎที่สอดคล้องกับพจน์เหล่านี้นิยามได้ดังนี้ (วิธีหาอยู่ด้านล่าง):',
+  'gen.step.oeisDefinition': 'นิยามลำดับมาตรฐาน{oeis}:',
   'gen.step.innerDefinition':
     'กฎข้อนี้เป็นฟังก์ชันประกอบ $a_n = f(g(n))$ เริ่มจากฟังก์ชันใน $g$ ก่อน:',
   'gen.step.innerTable': 'ค่าของฟังก์ชันใน $g(n)$ ที่ตำแหน่งที่ทราบค่า:',
