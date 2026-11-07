@@ -54,12 +54,13 @@ const signed = (x) => x < 0 ? `-${-x}` : `+${x}`;
 const add = (x, c) => c ? `${x}${signed(c)}` : x;
 const coefficient = (c, body) => c === 0 ? '' : c === 1 ? String(body) : c === -1 ? `-${body}` : `${c}${body}`;
 const polynomial = (terms) => terms.filter((term) => term && term !== '0').map((term, i) => i === 0 || term.startsWith('-') ? term : `+${term}`).join('') || '0';
+const shifted = (x, shift) => shift === 0 ? x : `(${x}${signed(shift)})`;
 
 const COMMON_ENTRIES = [
   make({ id: 'poly.lin', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [2, 1], sample: (g, c) => c.role === 'outer' ? [r(g, 1, 4), r(g, -2, 3)] : [r(g, 1, 5), r(g, -5, 5)],
     eval: (p, n) => p[0] * n + p[1], normalize: (p) => ({ m: p[0], b: p[1] }),
-    latex: (p, x) => `${p[0] === 1 ? '' : p[0]}${x}${add('', p[1])}`, detect: (p) => `f(n+1)-f(n)=${p[0]}`, substitute: (p, n) => `${p[0]}\\cdot${n}${add('', p[1])}`,
+    latex: (p, x) => polynomial([coefficient(p[0], x), String(p[1])]), detect: (p) => `f(n+1)-f(n)=${p[0]}`, substitute: (p, n) => polynomial([coefficient(p[0], n), String(p[1])]),
   }),
   make({ id: 'poly.quad', since: 1, tier: 1, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 0, 0], sample: (g) => [r(g, -2, 3), r(g, -2, 3), r(g, -3, 3)],
@@ -69,17 +70,17 @@ const COMMON_ENTRIES = [
   make({ id: 'geo.pure', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 2], sample: (g, c) => [r(g, 1, 4), r(g, 2, 3)],
     eval: (p, n) => p[0] * p[1] ** (n - 1), normalize: (p) => ({ first: p[0], ratio: p[1] }),
-    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}`, detect: (p) => `\\frac{f(n+1)}{f(n)}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}`,
+    latex: (p, x) => coefficient(p[0], `${p[1]}^{${x}-1}`), detect: (p) => `\\frac{f(n+1)}{f(n)}=${p[1]}`, substitute: (p, n) => coefficient(p[0], `${p[1]}^{${n}-1}`),
   }),
   make({ id: 'poly.shift_sq', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 0], sample: (g) => [r(g, -2, 3), r(g, -3, 3)],
     eval: (p, n) => (n + p[0]) ** 2 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{2}${signed(p[1])}`, detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{2}`, substitute: (p, n) => `(${n}${signed(p[0])})^{2}${signed(p[1])}`,
+    latex: (p, x) => add(`${shifted(x, p[0])}^{2}`, p[1]), detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{2}`, substitute: (p, n) => add(`${shifted(n, p[0])}^{2}`, p[1]),
   }),
   make({ id: 'poly.shift_cube', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [0, 0], sample: (g) => [r(g, -1, 2), r(g, -2, 2)],
     eval: (p, n) => (n + p[0]) ** 3 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{3}${signed(p[1])}`, detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{3}`, substitute: (p, n) => `(${n}${signed(p[0])})^{3}${signed(p[1])}`,
+    latex: (p, x) => add(`${shifted(x, p[0])}^{3}`, p[1]), detect: (p) => `f(n)${signed(-p[1])}=(n${signed(p[0])})^{3}`, substitute: (p, n) => add(`${shifted(n, p[0])}^{3}`, p[1]),
   }),
   make({ id: 'seq.triangular', since: 1, tier: 1, composable: true, arity: 1, maxIndex: 60 }, {
     fallback: [0], sample: (g) => [r(g, -2, 3)],
@@ -94,7 +95,7 @@ const COMMON_ENTRIES = [
   make({ id: 'geo.offset', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 2, 0], sample: (g) => [r(g, 1, 3), r(g, 2, 3), r(g, -3, 3)],
     eval: (p, n) => p[0] * p[1] ** (n - 1) + p[2], normalize: (p) => ({ first: p[0], ratio: p[1], add: p[2] }),
-    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}${signed(p[2])}`, detect: (p) => `\\frac{f(n+1)${signed(-p[2])}}{f(n)${signed(-p[2])}}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}${signed(p[2])}`,
+    latex: (p, x) => add(coefficient(p[0], `${p[1]}^{${x}-1}`), p[2]), detect: (p) => `\\frac{f(n+1)${signed(-p[2])}}{f(n)${signed(-p[2])}}=${p[1]}`, substitute: (p, n) => add(coefficient(p[0], `${p[1]}^{${n}-1}`), p[2]),
   }),
   make({ id: 'poly.nprod', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, -1, 3)],
@@ -104,7 +105,7 @@ const COMMON_ENTRIES = [
   make({ id: 'seq.alt_sign', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 4), r(g, 1, 3)],
     eval: (p, n) => (n % 2 ? 1 : -1) * (p[0] * n + p[1]), normalize: (p) => ({ multiplier: p[0], add: p[1] }),
-    latex: (p, x) => `(-1)^{${x}+1}(${p[0]}${x}${signed(p[1])})`, detect: (p) => `|f(n)|=${p[0] === 1 ? '' : p[0]}n${signed(p[1])}`, substitute: (p, n) => `(-1)^{${n}+1}(${p[0]}${n}${signed(p[1])})`,
+    latex: (p, x) => `(-1)^{${x}+1}(${polynomial([coefficient(p[0], x), String(p[1])])})`, detect: (p) => `|f(n)|=${p[0] === 1 ? '' : p[0]}n${signed(p[1])}`, substitute: (p, n) => `(-1)^{${n}+1}(${polynomial([coefficient(p[0], n), String(p[1])])})`,
   }),
   make({ id: 'rec.fib', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, 1, 3)],
@@ -114,7 +115,7 @@ const COMMON_ENTRIES = [
   make({ id: 'exp.pow2', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 0], sample: (g) => [r(g, 1, 3), r(g, -2, 2)],
     eval: (p, n) => p[0] * 2 ** n + p[1], normalize: (p) => ({ multiplier: p[0], add: p[1] }),
-    latex: (p, x) => `${p[0]}\\cdot2^{${x}}${signed(p[1])}`, detect: () => `\\Delta f(n+1)=2\\Delta f(n)`, substitute: (p, n) => `${p[0]}\\cdot2^{${n}}${signed(p[1])}`,
+    latex: (p, x) => add(coefficient(p[0], `2^{${x}}`), p[1]), detect: () => `\\Delta f(n+1)=2\\Delta f(n)`, substitute: (p, n) => add(coefficient(p[0], `2^{${n}}`), p[1]),
   }),
   make({ id: 'poly.diff2', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 1, 0], sample: (g) => [r(g, -2, 2), r(g, -2, 2), r(g, -2, 2)],
@@ -124,7 +125,7 @@ const COMMON_ENTRIES = [
   make({ id: 'seq.step3', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 3], sample: (g) => [r(g, -3, 5), r(g, 1, 4)],
     eval: (p, n) => p[0] + p[1] * (n - 1), normalize: (p) => ({ first: p[0], step: p[1] }),
-    latex: (p, x) => `${p[0]}${signed(p[1])}(${x}-1)`, detect: (p) => `f(n+1)-f(n)=${p[1]}`, substitute: (p, n) => `${p[0]}${signed(p[1])}(${n}-1)`,
+    latex: (p, x) => polynomial([String(p[0]), coefficient(p[1], `(${x}-1)`)]) , detect: (p) => `f(n+1)-f(n)=${p[1]}`, substitute: (p, n) => polynomial([String(p[0]), coefficient(p[1], `(${n}-1)`)]) ,
   }),
 ];
 

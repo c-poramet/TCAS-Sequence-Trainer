@@ -40,6 +40,17 @@ test('polynomial formulas omit zero and unit coefficients', () => {
   assert.equal(quad.latex([0, 1, 0], 'g(n)'), '\\left(g(n)\\right)');
 });
 
+test('all common identity coefficients render without redundant terms', () => {
+  const entry = (id) => COMMON_ENTRIES.find((item) => item.id === id);
+  assert.equal(entry('poly.lin').latex([0, 0], 'n'), '0');
+  assert.equal(entry('geo.pure').latex([1, 1], 'n'), '1^{n-1}');
+  assert.equal(entry('poly.shift_sq').latex([0, 0], 'n'), 'n^{2}');
+  assert.equal(entry('geo.offset').latex([1, 1, 0], 'n'), '1^{n-1}');
+  assert.equal(entry('seq.alt_sign').latex([1, 0], 'n'), '(-1)^{n+1}(n)');
+  assert.equal(entry('exp.pow2').latex([1, 0], 'n'), '2^{n}');
+  assert.equal(entry('seq.step3').latex([0, 0], 'n'), '0');
+});
+
 for (const entry of COMMON_ENTRIES) {
   test(`Pool-A entry validates: ${entry.id}`, () => {
     assert.deepEqual(validateEntry(entry, { samples: 200, seed: `pool-a-${entry.id}` }), { ok: true, errors: [] });
