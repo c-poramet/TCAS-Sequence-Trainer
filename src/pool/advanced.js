@@ -1036,6 +1036,204 @@ const REC_LIN2 = recEntry({
   sample: (rng) => [draw(rng, RANGE.lin2Mul1), draw(rng, RANGE.lin2Mul2), draw(rng, RANGE.lin2Seed), draw(rng, RANGE.lin2Seed)],
 });
 
+// Additional exam-style families. These are deliberately non-composable: their
+// definitions are useful as standalone recognition questions, but their values
+// are not constrained to stay small when nested inside another rule.
+function gcdInt(a, b) {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y !== 0) [x, y] = [y, x % y];
+  return x;
+}
+
+function digitSum(n) { return String(Math.abs(n)).split('').reduce((s, d) => s + Number(d), 0); }
+function digitProduct(n) { return String(Math.abs(n)).split('').reduce((s, d) => s * Number(d), 1); }
+function binaryOnes(n) { return n.toString(2).split('').filter((d) => d === '1').length; }
+function divisorList(n) {
+  const out = [];
+  for (let d = 1; d * d <= n; d++) {
+    if (n % d !== 0) continue;
+    out.push(d);
+    if (d * d !== n) out.push(n / d);
+  }
+  return out.sort((a, b) => a - b);
+}
+function primeFactors(n) {
+  const out = [];
+  let x = n;
+  for (let p = 2; p * p <= x; p++) while (x % p === 0) { out.push(p); x /= p; }
+  if (x > 1) out.push(x);
+  return out;
+}
+function fibonacci(n) {
+  let a = 0;
+  let b = 1;
+  for (let i = 0; i < n; i++) [a, b] = [b, a + b];
+  return a;
+}
+function lucas(n) { return fibonacci(n - 1) + fibonacci(n + 1); }
+function pell(n) {
+  let a = 0;
+  let b = 1;
+  for (let i = 0; i < n; i++) [a, b] = [b, 2 * b + a];
+  return a;
+}
+function jacobsthal(n) { return (2 ** n - (-1) ** n) / 3; }
+function choose(n, k) {
+  if (k < 0 || k > n) return 0;
+  let out = 1;
+  for (let i = 1; i <= k; i++) out = (out * (n - i + 1)) / i;
+  return out;
+}
+function catalan(n) { return choose(2 * n, n) / (n + 1); }
+function derangement(n) {
+  let a = 1;
+  let b = 0;
+  for (let i = 2; i <= n; i++) [a, b] = [b, (i - 1) * (a + b)];
+  return n === 0 ? 1 : b;
+}
+function partition(n) {
+  const p = Array(n + 1).fill(0);
+  p[0] = 1;
+  for (let k = 1; k <= n; k++) for (let i = k; i <= n; i++) p[i] += p[i - k];
+  return p[n];
+}
+function bell(n) {
+  const row = [1];
+  for (let i = 1; i <= n; i++) {
+    const next = [row[row.length - 1]];
+    for (let j = 1; j <= i; j++) next[j] = (next[j - 1] || 0) + (row[j] || 0);
+    row.splice(0, row.length, ...next);
+  }
+  return row[0];
+}
+function stirling2(n, k) {
+  const row = Array(k + 1).fill(0);
+  row[0] = 1;
+  for (let i = 1; i <= n; i++) for (let j = Math.min(i, k); j >= 1; j--) row[j] = j * row[j] + row[j - 1];
+  return row[k];
+}
+function eulerPhi(n) {
+  let out = n;
+  for (const p of new Set(primeFactors(n))) out = (out / p) * (p - 1);
+  return out;
+}
+function mobius(n) {
+  const f = primeFactors(n);
+  if (new Set(f).size !== f.length) return 0;
+  return f.length % 2 === 0 ? 1 : -1;
+}
+function liouville(n) { return primeFactors(n).length % 2 === 0 ? 1 : -1; }
+function largestPrimeFactor(n) { return primeFactors(n).at(-1); }
+function smallestPrimeFactor(n) { return primeFactors(n)[0]; }
+function collatzSteps(n) {
+  let x = n;
+  let count = 0;
+  while (x !== 1 && count < 1000) { x = x % 2 === 0 ? x / 2 : 3 * x + 1; count++; }
+  return count;
+}
+function alternatingDigitSum(n) {
+  const ds = String(n).split('').map(Number);
+  return ds.reduce((s, d, i) => s + (i % 2 === 0 ? d : -d), 0);
+}
+function isPalindrome(n) { const s = String(n); return s === [...s].reverse().join('') ? 1 : 0; }
+function factorialDigitSum(n) { return digitSum(factorial(n)); }
+function nthComposite(n) {
+  let count = 0;
+  for (let x = 4; ; x++) if (primeFactors(x).length > 1) { count++; if (count === n) return x; }
+}
+function nthSemiprime(n) {
+  let count = 0;
+  for (let x = 4; ; x++) if (primeFactors(x).length === 2) { count++; if (count === n) return x; }
+}
+function primeGap(n) { return primeAt(n + 1) - primeAt(n); }
+function squarefree(n) { return mobius(n) === 0 ? 0 : 1; }
+function makeFormulaEntry({ id, arity = 1, sample, evaluate, latex, normalize, rule }) {
+  return closedEntry(
+    {
+      id,
+      since: SINCE,
+      tier: id.includes('digit') || id.includes('binary') || id.includes('collatz') ? 3 : 4,
+      composable: false,
+      arity,
+      maxIndex: 60,
+      normalize,
+      sampleParams: sample,
+      evaluate: (p, n) => isIndex(n) && n <= 60 ? safe(evaluate(p, n)) : null,
+      latex,
+    },
+    {
+      id,
+      detect: (p, pts) => pts.slice(0, DETECT_COUNT).map(({ n, value }) => `f(${n})=${value}`),
+      chain: (p, n) => [latex(p, String(n)), String(evaluate(p, n))],
+      extraDefinition: () => [rule],
+    },
+  );
+}
+
+const OFFSET_SAMPLE = (rng) => [draw(rng, [-3, 3])];
+const OFFSET = (base, text) => makeFormulaEntry({
+  id: base.id,
+  sample: OFFSET_SAMPLE,
+  normalize: (p) => ({ add: p[0] }),
+  evaluate: (p, n) => base.evaluate(n) + p[0],
+  latex: (p, arg = 'n') => `${base.latex(arg)}${signed(p[0])}`,
+  rule: text,
+});
+
+const EXTRA_ENTRIES = [
+  OFFSET({ id: 'fig.triangular', evaluate: (n) => n * (n + 1) / 2, latex: (x) => `\\frac{${x}(${x}+1)}{2}` }, 'Triangular numbers plus a constant.'),
+  OFFSET({ id: 'fig.pentagonal', evaluate: (n) => n * (3 * n - 1) / 2, latex: (x) => `\\frac{${x}(3${x}-1)}{2}` }, 'Pentagonal numbers plus a constant.'),
+  OFFSET({ id: 'fig.hexagonal', evaluate: (n) => n * (2 * n - 1), latex: (x) => `${x}(2${x}-1)` }, 'Hexagonal numbers plus a constant.'),
+  OFFSET({ id: 'fig.centered_square', evaluate: (n) => n * n + (n - 1) * (n - 1), latex: (x) => `${x}^{2}+(${x}-1)^{2}` }, 'Centered square numbers plus a constant.'),
+  OFFSET({ id: 'fig.tetrahedral', evaluate: (n) => n * (n + 1) * (n + 2) / 6, latex: (x) => `\\frac{${x}(${x}+1)(${x}+2)}{6}` }, 'Tetrahedral numbers plus a constant.'),
+  OFFSET({ id: 'fig.square_pyramidal', evaluate: (n) => n * (n + 1) * (2 * n + 1) / 6, latex: (x) => `\\frac{${x}(${x}+1)(2${x}+1)}{6}` }, 'Square pyramidal numbers plus a constant.'),
+  OFFSET({ id: 'fig.pronic', evaluate: (n) => n * (n + 1), latex: (x) => `${x}(${x}+1)` }, 'Products of consecutive integers plus a constant.'),
+  OFFSET({ id: 'comb.catalan', evaluate: catalan, latex: (x) => `\\frac{1}{${x}+1}\\binom{2${x}}{${x}}` }, 'Catalan numbers plus a constant.'),
+  OFFSET({ id: 'comb.choose2', evaluate: (n) => choose(n + 1, 2), latex: (x) => `\\binom{${x}+1}{2}` }, 'The number of pairs chosen from the first positions.'),
+  OFFSET({ id: 'comb.derangement', evaluate: derangement, latex: (x) => `!${x}` }, 'Derangement numbers plus a constant.'),
+  OFFSET({ id: 'comb.bell', evaluate: bell, latex: (x) => `B_{${x}}` }, 'Bell numbers plus a constant.'),
+  OFFSET({ id: 'comb.partition', evaluate: partition, latex: (x) => `p(${x})` }, 'Integer partition numbers plus a constant.'),
+  OFFSET({ id: 'seq.fibonacci_closed', evaluate: fibonacci, latex: (x) => `F_{${x}}` }, 'Fibonacci numbers plus a constant.'),
+  OFFSET({ id: 'seq.lucas', evaluate: lucas, latex: (x) => `L_{${x}}` }, 'Lucas numbers plus a constant.'),
+  OFFSET({ id: 'seq.pell', evaluate: pell, latex: (x) => `P_{${x}}` }, 'Pell numbers plus a constant.'),
+  OFFSET({ id: 'seq.jacobsthal', evaluate: jacobsthal, latex: (x) => `J_{${x}}` }, 'Jacobsthal numbers plus a constant.'),
+  OFFSET({ id: 'seq.prime_gap', evaluate: primeGap, latex: (x) => `p_{${x}+1}-p_{${x}}` }, 'Gaps between consecutive primes plus a constant.'),
+  OFFSET({ id: 'seq.composite', evaluate: nthComposite, latex: (x) => `c_{${x}}` }, 'The n-th composite number plus a constant.'),
+  OFFSET({ id: 'seq.semiprime', evaluate: nthSemiprime, latex: (x) => `s_{${x}}` }, 'The n-th semiprime plus a constant.'),
+  OFFSET({ id: 'nt.totient', evaluate: eulerPhi, latex: (x) => `\\varphi(${x})` }, 'Euler totients plus a constant.'),
+  OFFSET({ id: 'nt.divisor_count', evaluate: (n) => divisorList(n).length, latex: (x) => `\\tau(${x})` }, 'The number of positive divisors plus a constant.'),
+  OFFSET({ id: 'nt.divisor_sum', evaluate: (n) => divisorList(n).reduce((a, b) => a + b, 0), latex: (x) => `\\sigma(${x})` }, 'The sum of positive divisors plus a constant.'),
+  OFFSET({ id: 'nt.proper_divisor_sum', evaluate: (n) => divisorList(n).reduce((a, b) => a + b, 0) - n, latex: (x) => `s(${x})` }, 'The sum of proper divisors plus a constant.'),
+  OFFSET({ id: 'nt.mobius', evaluate: mobius, latex: (x) => `\\mu(${x})` }, 'Mobius function values plus a constant.'),
+  OFFSET({ id: 'nt.liouville', evaluate: liouville, latex: (x) => `\\lambda(${x})` }, 'Liouville function values plus a constant.'),
+  OFFSET({ id: 'nt.squarefree', evaluate: squarefree, latex: (x) => `\\mathbf{1}_{\\mathrm{sqfree}}(${x})` }, 'Squarefree indicators plus a constant.'),
+  OFFSET({ id: 'nt.largest_prime_factor', evaluate: largestPrimeFactor, latex: (x) => `P(${x})` }, 'Largest prime factors plus a constant.'),
+  OFFSET({ id: 'nt.smallest_prime_factor', evaluate: smallestPrimeFactor, latex: (x) => `p(${x})` }, 'Smallest prime factors plus a constant.'),
+  OFFSET({ id: 'nt.gcd_12', evaluate: (n) => gcdInt(n, 12), latex: (x) => `\\gcd(${x},12)` }, 'GCD with a fixed integer plus a constant.'),
+  OFFSET({ id: 'nt.lcm_12', evaluate: (n) => (n * 12) / gcdInt(n, 12), latex: (x) => `\\operatorname{lcm}(${x},12)` }, 'LCM with a fixed integer plus a constant.'),
+  OFFSET({ id: 'digit.binary_ones', evaluate: binaryOnes, latex: (x) => `s_2(${x})` }, 'The number of one bits in the binary expansion plus a constant.'),
+  OFFSET({ id: 'digit.binary_length', evaluate: (n) => n.toString(2).length, latex: (x) => `\\lfloor\\log_2(${x})\\rfloor+1` }, 'Binary lengths plus a constant.'),
+  OFFSET({ id: 'digit.digital_root', evaluate: (n) => n === 0 ? 0 : 1 + ((n - 1) % 9), latex: (x) => `\\operatorname{dr}(${x})` }, 'Digital roots plus a constant.'),
+  OFFSET({ id: 'digit.product', evaluate: digitProduct, latex: (x) => `\\operatorname{dp}(${x})` }, 'Products of decimal digits plus a constant.'),
+  OFFSET({ id: 'digit.sum', evaluate: digitSum, latex: (x) => `\\operatorname{ds}(${x})` }, 'Sums of decimal digits plus a constant.'),
+  OFFSET({ id: 'digit.alternating_sum', evaluate: alternatingDigitSum, latex: (x) => `\\operatorname{as}(${x})` }, 'Alternating sums of decimal digits plus a constant.'),
+  OFFSET({ id: 'digit.reverse', evaluate: (n) => reverseDigits(n), latex: (x) => `\\operatorname{rev}(${x})` }, 'Digit reversals plus a constant.'),
+  OFFSET({ id: 'digit.palindrome', evaluate: isPalindrome, latex: (x) => `\\operatorname{pal}(${x})` }, 'Palindrome indicators plus a constant.'),
+  OFFSET({ id: 'digit.factorial_sum', evaluate: factorialDigitSum, latex: (x) => `\\operatorname{ds}(${x}!)` }, 'Digit sums of factorials plus a constant.'),
+  OFFSET({ id: 'arith.floor_sqrt', evaluate: (n) => Math.floor(Math.sqrt(n)), latex: (x) => `\\lfloor\\sqrt{${x}}\\rfloor` }, 'Floor square roots plus a constant.'),
+  OFFSET({ id: 'arith.ceil_sqrt', evaluate: (n) => Math.ceil(Math.sqrt(n)), latex: (x) => `\\lceil\\sqrt{${x}}\\rceil` }, 'Ceiling square roots plus a constant.'),
+  OFFSET({ id: 'arith.sum_cubes', evaluate: (n) => ((n * (n + 1)) / 2) ** 2, latex: (x) => `\\left(\\frac{${x}(${x}+1)}{2}\\right)^2` }, 'Sums of the first cubes plus a constant.'),
+  OFFSET({ id: 'arith.centered_triangular', evaluate: (n) => n * n - n + 1, latex: (x) => `${x}^{2}-${x}+1` }, 'Centered triangular numbers plus a constant.'),
+  OFFSET({ id: 'arith.collatz_steps', evaluate: collatzSteps, latex: (x) => `\\operatorname{ColSteps}(${x})` }, 'Collatz stopping times plus a constant.'),
+  OFFSET({ id: 'comb.stirling2', evaluate: (n) => stirling2(n + 2, 2), latex: (x) => `\\left\\{\\matrix{${x}+2\\\\2}\\right\\}` }, 'Stirling numbers of the second kind plus a constant.'),
+  OFFSET({ id: 'seq.pell_lucas', evaluate: (n) => pell(n) + pell(n + 1), latex: (x) => `Q_{${x}}` }, 'Pell-Lucas numbers plus a constant.'),
+  OFFSET({ id: 'seq.prime_index', evaluate: (n) => primeIndex(n), latex: (x) => `\\pi(${x})` }, 'Prime-counting function values plus a constant.'),
+  OFFSET({ id: 'seq.omega', evaluate: (n) => new Set(primeFactors(n)).size, latex: (x) => `\\omega(${x})` }, 'Counts of distinct prime factors plus a constant.'),
+  OFFSET({ id: 'seq.big_omega', evaluate: (n) => primeFactors(n).length, latex: (x) => `\\Omega(${x})` }, 'Counts of prime factors with multiplicity plus a constant.'),
+  OFFSET({ id: 'seq.collatz_peak', evaluate: (n) => { let x = n; let peak = x; for (let i = 0; x !== 1 && i < 1000; i++) { x = x % 2 === 0 ? x / 2 : 3 * x + 1; peak = Math.max(peak, x); } return peak; }, latex: (x) => `\\operatorname{ColMax}(${x})` }, 'Maximum values reached by Collatz trajectories plus a constant.'),
+];
+
 // ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
@@ -1059,4 +1257,5 @@ export const ADVANCED_ENTRIES = [
   SEQ_ALT_AP,
   SEQ_PRIME,
   SEQ_PRIME_SQ,
+  ...EXTRA_ENTRIES,
 ].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
