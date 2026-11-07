@@ -248,16 +248,16 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .train__bucket-count { color: var(--ink-soft); font-size: var(--text-sm); }
 .train__note { grid-column: 1 / -1; margin: -4px 0 0; color: var(--ink-soft); font-size: var(--text-sm); }
 .train__field {
-  grid-column: 1 / -1;
-  justify-self: center;
-  width: min(100%, 360px);
+  grid-column: auto;
+  justify-self: stretch;
+  width: 100%;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--bg-raised);
 }
-.train__options { display: grid; gap: 8px; }
-.train__option-field { display: grid; gap: 6px; margin-top: 8px; }
+.train__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.train__option-field { display: grid; gap: 6px; }
 .gen__input { min-height: 48px; padding: 10px 14px; }
 .gen__fixed { grid-column: 1 / -1; }
 .gen__submit { grid-column: 1 / -1; justify-self: center; min-width: 160px; height: 40px; }
@@ -503,6 +503,7 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   .run__answer-row { grid-template-columns: 1fr; }
   .run__answer-row .run__submit { height: 40px; }
   .gen__form, .train__form, .settings__field { grid-template-columns: 1fr; }
+  .train__options { grid-template-columns: 1fr; }
   .gen__overview { grid-template-columns: 1fr; }
   .gen__set-qr { justify-self: start; }
   .gen__setid-row { grid-template-columns: minmax(0, 1fr) auto auto; }

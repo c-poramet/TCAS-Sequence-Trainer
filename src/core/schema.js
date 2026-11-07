@@ -65,7 +65,7 @@ const langEntry = Object.freeze(
 /** @type {ReadonlyArray<SchemaEntry>} */
 export const SCHEMA = Object.freeze([
   langEntry,
-  entry('answerMode', 'enum', 'typed', { options: ['typed', 'mc'] }),
+  entry('answerMode', 'enum', 'mc', { options: ['typed', 'mc'] }),
   entry('mcChoices', 'int', 5, { min: 3, max: 8 }),
   entry('showTimer', 'bool', true),
   entry('gen.count', 'int', 20, { min: 1, max: 5000 }),

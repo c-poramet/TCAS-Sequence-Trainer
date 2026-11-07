@@ -127,6 +127,7 @@ registerStrings('en', {
   'ui.train.unratedNote': 'Functions you have not tried enough yet count as normal.',
   'ui.train.countLabel': 'Number of questions',
   'ui.train.countHelp': 'Enter 0 for an endless session.',
+  'ui.train.choiceCount': 'Number of choices',
   'ui.train.noBucket': 'Choose at least one group of functions.',
   'ui.train.start': 'Start training',
 
@@ -305,6 +306,7 @@ registerStrings('th', {
   'ui.train.unratedNote': 'ฟังก์ชันที่ยังทำไม่มากพอจะนับอยู่ในกลุ่มปกติ',
   'ui.train.countLabel': 'จำนวนข้อ',
   'ui.train.countHelp': 'ใส่ 0 เพื่อฝึกต่อเนื่องไม่จำกัดจำนวนข้อ',
+  'ui.train.choiceCount': 'จำนวนตัวเลือก',
   'ui.train.noBucket': 'กรุณาเลือกอย่างน้อยหนึ่งกลุ่มของฟังก์ชัน',
   'ui.train.start': 'เริ่มฝึก',
 

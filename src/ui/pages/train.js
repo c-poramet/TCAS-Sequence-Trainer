@@ -95,6 +95,12 @@ export function mount(container, ctx) {
     h('label', { class: 'train__label', for: 'train-mc-choices' }, t('ui.train.choiceCount')),
     mcChoices,
   );
+  const answerModeField = h(
+    'div',
+    { class: 'train__option-field' },
+    h('label', { class: 'train__label', for: 'train-answer-mode' }, t('settings.answerMode.label')),
+    answerMode,
+  );
   const syncChoiceVisibility = () => {
     mcChoicesField.hidden = answerMode.value !== 'mc';
   };
@@ -147,8 +153,7 @@ export function mount(container, ctx) {
     h(
       'div',
       { class: 'train__field train__options' },
-      h('label', { class: 'train__label', for: 'train-answer-mode' }, t('settings.answerMode.label')),
-      answerMode,
+      answerModeField,
       mcChoicesField,
     ),
     error,

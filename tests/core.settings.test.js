@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 const TABLE = {
-  lang: ['enum', 'en'], answerMode: ['enum', 'typed'], mcChoices: ['int', 5, 3, 8], showTimer: ['bool', true],
+  lang: ['enum', 'en'], answerMode: ['enum', 'mc'], mcChoices: ['int', 5, 3, 8], showTimer: ['bool', true],
   'gen.count': ['int', 20, 1, 5000], 'gen.maxSetSize': ['int', 2000, 1, 5000],
   'gen.hardRatio': ['float', 0.25, 0, 1], 'gen.mixedChance': ['float', 0.5, 0, 1],
   'gen.cap': ['int', 2500, 10, 1000000], 'gen.maxAttempts': ['int', 300, 1, 5000], 'gen.poolVersion': ['int', null, 1],
@@ -81,7 +81,7 @@ test('invalid input leaves the setting unchanged', () => {
   assert.equal(setSetting('mcChoices', 'abc'), 7);
   assert.equal(setSetting('mcChoices', NaN), 7);
   assert.equal(setSetting('mcChoices', null), 7);
-  assert.equal(setSetting('answerMode', 'bogus'), 'typed');
+  assert.equal(setSetting('answerMode', 'bogus'), 'mc');
   assert.equal(setSetting('showTimer', 'maybe'), true);
   assert.deepEqual(setSetting('trainer.buckets', []), ['easy', 'normal', 'hard', 'failed']);
   assert.deepEqual(setSetting('gen.normalTiers', 'a,b'), [1, 2]);
