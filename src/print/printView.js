@@ -98,6 +98,7 @@ export function renderPrintView(container, { setId, questions, options }) {
                 h('td', { class: 'print__answer-value' }, answerText(q, i)))),
           ),
         ),
+      ),
     );
   }
 
