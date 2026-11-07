@@ -58,7 +58,7 @@ function buildCard(entry) {
       'summary',
       { class: 'dev__entry-summary' },
       h('code', { class: 'dev__entry-id' }, entry.id),
-      h('span', { class: 'dev__entry-tier' }, label('ui.dev.tier', { tier: entry.tier })),
+      h('span', { class: ['dev__entry-tier', `dev__entry-tier--${entry.tier}`] }, label('ui.dev.tier', { tier: entry.tier })),
     ),
     h(
       'div',
