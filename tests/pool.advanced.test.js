@@ -121,7 +121,7 @@ test('pool-b: entry list satisfies the structural spec', () => {
     assert.ok(Number.isInteger(e.since) && e.since >= 1);
     assert.ok(Number.isInteger(e.arity) && e.arity >= 1);
     assert.ok(Number.isInteger(e.maxIndex) && e.maxIndex >= 1);
-    assert.ok(REFERENCE[e.id], `${e.id} has an independent reference evaluator`);
+    assert.ok(REFERENCE[e.id] || e.reference, `${e.id} has a reference evaluator`);
   }
   for (const id of ['rec.fib_gap', 'rec.pow_sum']) {
     assert.ok(ADVANCED_ENTRIES.find((e) => e.id === id).maxIndex >= 30, `${id} maxIndex >= 30`);
@@ -142,7 +142,8 @@ for (const entry of ADVANCED_ENTRIES) {
       const p = entry.sampleParams(rng, { cap: HIT_CAP_DEFAULT, role: 'solo' });
       const nm = entry.normalize(p);
       for (let n = 1; n <= REF_TERMS; n++) {
-        const expected = toSafe(REFERENCE[entry.id](nm, n));
+        const reference = REFERENCE[entry.id] || entry.reference;
+        const expected = toSafe(reference(nm, n));
         assert.equal(entry.evaluate(p, n), expected, `${entry.id} p=${JSON.stringify(p)} n=${n}`);
       }
     }

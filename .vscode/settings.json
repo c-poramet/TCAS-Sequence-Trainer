@@ -2,6 +2,14 @@
     "chat.tools.terminal.autoApprove": {
         "env": true,
         "true": true,
-        "printf": true
+        "printf": true,
+        "/^node --test tests/\\*\\.test\\.js 2>&1 \\| rg \"\\^✖\\|\\^ℹ tests\\|\\^ℹ pass\\|\\^ℹ fail\\|AssertionError\\|not ok\" \\| tail -40$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node --input-type=module -e \"import \\{ ADVANCED_ENTRIES \\} from '\\./src/pool/advanced\\.js'; const baseline = 17; console\\.log\\(\\{ total: ADVANCED_ENTRIES\\.length, added: ADVANCED_ENTRIES\\.length - baseline \\}\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

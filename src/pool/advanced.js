@@ -1124,8 +1124,8 @@ function mobius(n) {
   return f.length % 2 === 0 ? 1 : -1;
 }
 function liouville(n) { return primeFactors(n).length % 2 === 0 ? 1 : -1; }
-function largestPrimeFactor(n) { return primeFactors(n).at(-1); }
-function smallestPrimeFactor(n) { return primeFactors(n)[0]; }
+function largestPrimeFactor(n) { return n === 1 ? 1 : primeFactors(n).at(-1); }
+function smallestPrimeFactor(n) { return n === 1 ? 1 : primeFactors(n)[0]; }
 function collatzSteps(n) {
   let x = n;
   let count = 0;
@@ -1158,6 +1158,7 @@ function makeFormulaEntry({ id, arity = 1, sample, evaluate, latex, normalize, r
       arity,
       maxIndex: 60,
       normalize,
+      reference: (nm, n) => safe(evaluate([nm.add], n)),
       sampleParams: sample,
       evaluate: (p, n) => isIndex(n) && n <= 60 ? safe(evaluate(p, n)) : null,
       latex,

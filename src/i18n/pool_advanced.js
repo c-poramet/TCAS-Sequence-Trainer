@@ -52,6 +52,27 @@ for (const id of IDS) {
   put(id, 'verify', VERIFY_EN, VERIFY_TH);
 }
 
+const EXTRA_IDS = [
+  'fig.triangular', 'fig.pentagonal', 'fig.hexagonal', 'fig.centered_square', 'fig.tetrahedral',
+  'fig.square_pyramidal', 'fig.pronic', 'comb.catalan', 'comb.choose2', 'comb.derangement',
+  'comb.bell', 'comb.partition', 'seq.fibonacci_closed', 'seq.lucas', 'seq.pell', 'seq.jacobsthal',
+  'seq.prime_gap', 'seq.composite', 'seq.semiprime', 'nt.totient', 'nt.divisor_count',
+  'nt.divisor_sum', 'nt.proper_divisor_sum', 'nt.mobius', 'nt.liouville', 'nt.squarefree',
+  'nt.largest_prime_factor', 'nt.smallest_prime_factor', 'nt.gcd_12', 'nt.lcm_12',
+  'digit.binary_ones', 'digit.binary_length', 'digit.digital_root', 'digit.product', 'digit.sum',
+  'digit.alternating_sum', 'digit.reverse', 'digit.palindrome', 'digit.factorial_sum',
+  'arith.floor_sqrt', 'arith.ceil_sqrt', 'arith.sum_cubes', 'arith.centered_triangular',
+  'arith.collatz_steps', 'comb.stirling2', 'seq.pell_lucas', 'seq.prime_index', 'seq.omega',
+  'seq.big_omega', 'seq.collatz_peak',
+];
+
+for (const id of EXTRA_IDS) {
+  put(id, 'observe', OBSERVE_EN, OBSERVE_TH);
+  put(id, 'detect', 'Compare the known values with the named number-theory, combinatorial, digit, or arithmetic pattern.', 'เปรียบเทียบค่าที่ทราบกับรูปแบบจำนวนเชิงทฤษฎี จำนวนเชิงการจัดหมู่ รูปแบบเลขโดด หรือรูปแบบเลขคณิตที่ระบุ');
+  put(id, 'rule', 'Each term follows the displayed rule, with the sampled constant added.', 'แต่ละพจน์เป็นไปตามกฎที่แสดง โดยบวกค่าคงที่ที่สุ่มได้');
+  put(id, 'verify', VERIFY_EN, VERIFY_TH);
+}
+
 // --- primes -----------------------------------------------------------------
 put(
   'seq.prime',
