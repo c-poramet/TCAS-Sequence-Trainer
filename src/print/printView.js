@@ -32,9 +32,8 @@ function maskedTerms(q) {
 export function renderPrintView(container, { setId, questions, options }) {
   clear(container);
   const fragment = document.createDocumentFragment();
-  const isMc = options.answerMode === 'mc';
   const choiceCount = Number.isInteger(options.mcChoices) ? options.mcChoices : getSetting('mcChoices');
-  const choiceSets = isMc ? questions.map((q) => getChoices(q, choiceCount)) : [];
+  const choiceSets = questions.map((q) => getChoices(q, choiceCount));
 
   const setQr = renderQr(setId, t('print.setQrLabel'));
   fragment.appendChild(
@@ -58,24 +57,23 @@ export function renderPrintView(container, { setId, questions, options }) {
         h('div', { class: 'print__qr print__question-qr' }, renderQr(q.id, t('print.questionQrLabel')))),
       renderSequence(maskedTerms(q), { missing: q.missing }),
     ];
-    if (isMc) {
-      parts.push(
-        h('ol', { class: 'print__choices' },
-          choiceSets[i].choices.map((value, k) =>
-            h('li', { class: 'print__choice', 'data-index': String(k) },
-              h('span', { class: 'print__choice-label' }, choiceLabel(k)),
-              ' ',
-              h('span', { class: 'print__choice-value' }, String(value))))),
-      );
-    }
+    parts.push(
+      h('ol', { class: 'print__choices' },
+        choiceSets[i].choices.map((value, k) =>
+          h('li', { class: 'print__choice', 'data-index': String(k) },
+            h('span', { class: 'print__choice-label' }, choiceLabel(k)),
+            ' ',
+            h('span', { class: 'print__choice-value' }, String(value))))),
+    );
     list.appendChild(h('li', { class: 'print__q', 'data-qid': q.id }, parts));
   });
   fragment.appendChild(list);
 
   if (options.includeAnswers) {
-    const answerText = (q, i) => (isMc
-      ? t('print.answerMc', { label: choiceLabel(choiceSets[i].correctIndex), value: q.answer })
-      : String(q.answer));
+    const answerText = (q, i) => t('print.answerMc', {
+      label: choiceLabel(choiceSets[i].correctIndex),
+      value: q.answer,
+    });
     fragment.appendChild(
       h('section', { class: 'print__answers' },
         h('h2', { class: 'print__heading' }, t('print.answers')),

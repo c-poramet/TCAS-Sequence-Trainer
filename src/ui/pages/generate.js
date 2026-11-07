@@ -319,7 +319,7 @@ export function mount(container, ctx) {
     solutionsCb.checked = Boolean(getSetting('print.includeSolutions'));
     const printLink = h(
       'a',
-      { class: 'gen__print', href: printHash(sid, answersCb.checked, solutionsCb.checked) },
+      { class: 'gen__print gen__link-button', href: printHash(sid, answersCb.checked, solutionsCb.checked) },
       t('ui.generate.print'),
     );
     const updateHref = () => printLink.setAttribute('href', printHash(sid, answersCb.checked, solutionsCb.checked));
@@ -357,28 +357,36 @@ export function mount(container, ctx) {
     resultEl.append(
       h('h2', { class: 'gen__result-title' }, t('ui.generate.resultTitle')),
       h(
-        'p',
-        { class: 'gen__summary' },
-        t('ui.generate.summary', { count: questions.length, seed: settings.seed }),
-      ),
-      h(
         'div',
-        { class: 'gen__setid-row' },
-        h('label', { class: 'gen__label', for: 'gen-setid' }, t('ui.generate.setId')),
-        sidInput,
-        copyBtn,
-        copyStatus,
+        { class: 'gen__overview' },
+        h(
+          'div',
+          { class: 'gen__overview-content' },
+          h(
+            'p',
+            { class: 'gen__summary' },
+            t('ui.generate.summary', { count: questions.length, seed: settings.seed }),
+          ),
+          h(
+            'div',
+            { class: 'gen__setid-row' },
+            h('label', { class: 'gen__label', for: 'gen-setid' }, t('ui.generate.setId')),
+            sidInput,
+            copyBtn,
+            h('a', { class: 'gen__link-button gen__permalink', href: '#/set/' + encodeURIComponent(sid) }, t('ui.generate.permalink')),
+            copyStatus,
+          ),
+          h(
+            'fieldset',
+            { class: 'gen__print-options' },
+            h('legend', { class: 'gen__legend' }, t('ui.generate.printOptions')),
+            h('label', { class: 'gen__check-label', for: 'gen-print-answers' }, answersCb, h('span', {}, t('ui.generate.printAnswers'))),
+            h('label', { class: 'gen__check-label', for: 'gen-print-solutions' }, solutionsCb, h('span', {}, t('ui.generate.printSolutions'))),
+          ),
+          h('div', { class: 'gen__actions' }, practiceBtn, printLink),
+        ),
+        h('div', { class: 'gen__set-qr' }, renderQr(sid, t('print.setQrLabel'))),
       ),
-      h('div', { class: 'gen__set-qr' }, renderQr(sid, t('print.setQrLabel'))),
-      h('p', { class: 'gen__permalink' }, h('a', { href: '#/set/' + encodeURIComponent(sid) }, t('ui.generate.permalink'))),
-      h(
-        'fieldset',
-        { class: 'gen__print-options' },
-        h('legend', { class: 'gen__legend' }, t('ui.generate.printOptions')),
-        h('label', { class: 'gen__check-label', for: 'gen-print-answers' }, answersCb, h('span', {}, t('ui.generate.printAnswers'))),
-        h('label', { class: 'gen__check-label', for: 'gen-print-solutions' }, solutionsCb, h('span', {}, t('ui.generate.printSolutions'))),
-      ),
-      h('div', { class: 'gen__actions' }, practiceBtn, printLink),
       h('h3', { class: 'gen__list-title' }, t('ui.generate.listTitle')),
       list,
       more,
