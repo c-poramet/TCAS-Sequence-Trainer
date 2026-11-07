@@ -136,6 +136,12 @@ function renderChrome(pageId, activeNavId) {
       },
       t('ui.lang.switch'),
     ),
+    h('a', {
+      class: 'nav__coffee',
+      href: 'https://buymeacoffee.com/c.poramet',
+      target: '_blank',
+      rel: 'noreferrer',
+    }, t('ui.support.coffee')),
   );
 }
 

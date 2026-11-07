@@ -12,6 +12,8 @@ registerStrings('en', {
   'ui.nav.dev': 'Dev tools',
   'ui.lang.switch': 'ไทย',
   'ui.lang.switchLabel': 'Switch language to Thai',
+  'ui.support.coffee': 'Buy me a coffee',
+  'ui.support.message': 'This costs me a bit of time and money. Please consider buying me a coffee.',
 
   'ui.title.home': 'Home',
   'ui.title.generate': 'Generate set',
@@ -192,6 +194,8 @@ registerStrings('th', {
   'ui.nav.dev': 'เครื่องมือ Dev',
   'ui.lang.switch': 'English',
   'ui.lang.switchLabel': 'เปลี่ยนภาษาเป็นอังกฤษ',
+  'ui.support.coffee': 'เลี้ยงกาแฟผู้พัฒนา',
+  'ui.support.message': 'เสียตังค์และก็เวลาทำอยู่นะครับ จ่ายค่ากาแฟหน่อยก็ดี',
 
   'ui.title.home': 'หน้าแรก',
   'ui.title.generate': 'สร้างชุดโจทย์',

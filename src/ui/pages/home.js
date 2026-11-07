@@ -92,6 +92,15 @@ export function mount(container, ctx) {
       h('p', { class: 'home__lead' }, t('ui.home.lead')),
       h('ul', { class: 'home__cards' }, ...cards),
       form,
+      h('p', { class: 'home__support' },
+        h('em', null,
+          h('a', {
+            href: 'https://buymeacoffee.com/c.poramet',
+            target: '_blank',
+            rel: 'noreferrer',
+          }, t('ui.support.message')),
+        ),
+      ),
     ),
   );
   return () => {};

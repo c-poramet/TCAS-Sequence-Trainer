@@ -94,6 +94,17 @@ code { font-family: var(--font-mono); }
 .nav__link:hover, .nav__lang:hover, .nav__link[aria-current="page"] { color: var(--ink); background: var(--bg-hover); }
 .nav__link[aria-current="page"] { box-shadow: inset 0 -2px var(--yellow); }
 .nav__lang { white-space: nowrap; }
+.nav__coffee {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+.nav__coffee:hover { color: var(--ink); background: var(--bg-hover); }
 
 #app { max-width: 1200px; margin: 0 auto; padding: 56px 28px 80px; }
 .home, .lookup, .gen, .run, .train, .stats, .settings, .print { max-width: 920px; margin: 0 auto; }
@@ -115,6 +126,12 @@ h2, h3 { font-weight: 600; line-height: 1.35; }
 .home__card-text, .gen__help, .settings__help, .train__help, .stats__note { color: var(--ink-soft); }
 .home__cta { font-weight: 600; }
 .home__open { max-width: 620px; }
+.home__support {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: var(--ink-soft);
+  white-space: pre-line;
+}
 .home__open-title { font-size: 20px; }
 .home__input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
 .home__input-row .home__input { min-width: 0; }
