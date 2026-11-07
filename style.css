@@ -242,6 +242,23 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .lookup__scan-status { color: var(--ink-soft); font-size: var(--text-sm); }
 .lookup__question { margin-top: 28px; }
 .lookup__heading { margin-bottom: 8px; font-size: 20px; }
+.lookup__back {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  margin: 16px 0 24px;
+  padding: 14px 24px;
+  border: 2px solid var(--yellow-ink);
+  border-radius: var(--radius-md);
+  background: var(--yellow);
+  box-shadow: var(--shadow-2);
+  font-size: 20px;
+  font-weight: 700;
+}
+.lookup__back:hover { background: var(--yellow); box-shadow: 0 6px 20px rgba(63, 46, 28, .16); }
 .lookup__id, .gen__setid, .print__setid, .print__qid { color: var(--ink-soft); }
 .lookup__code, .gen__qid, .print__qid code { padding: 2px 6px; border-radius: var(--radius-sm); background: var(--bg-sunken); }
 .lookup__sequence { padding: 20px 0; }
