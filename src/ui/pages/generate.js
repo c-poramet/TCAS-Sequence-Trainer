@@ -531,9 +531,9 @@ export function mount(container, ctx) {
     field('gen-mixed', 'ui.generate.mixedChance.label', mixedInput, 'ui.generate.ratio.help'),
     field('gen-seed', 'ui.generate.seed.label', seedInput, 'ui.generate.seed.help'),
     h(
-      'section',
+      'details',
       { class: 'gen__fixed' },
-      h('h2', { class: 'gen__fixed-title' }, t('ui.generate.otherSettings')),
+      h('summary', { class: 'gen__fixed-title' }, t('ui.generate.otherSettings')),
       fixedList,
       h('a', { class: 'gen__settings-link', href: '#/settings' }, t('ui.generate.editSettings')),
     ),
