@@ -303,6 +303,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .gen__print-options .gen__legend { width: 100%; margin: 0 0 4px; font-size: var(--text-lg); }
 .gen__check-label { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-soft); cursor: pointer; }
 .gen__actions { margin-bottom: 28px; }
+.gen__actions > button,
+.gen__actions > a { margin-bottom: 0; }
 .gen__list-title { padding-top: 24px; margin-bottom: 12px; border-top: 1px solid var(--line); font-size: var(--text-lg); }
 .gen__list, .run__choices, .stats__bucket-list { padding-left: 28px; }
 .gen__row {
