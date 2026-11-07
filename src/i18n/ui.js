@@ -118,6 +118,7 @@ registerStrings('en', {
   'ui.run.noAverage': 'No answers yet',
   'ui.run.restart': 'Practise this set again',
   'ui.run.trainAgain': 'Train again',
+  'ui.run.resultChart': 'Practice result chart',
 
   'ui.train.title': 'Personal trainer',
   'ui.train.lead': 'Questions are chosen from your own results, so you spend time where you need it most.',
@@ -295,6 +296,7 @@ registerStrings('th', {
   'ui.run.noAverage': 'ยังไม่มีคำตอบ',
   'ui.run.restart': 'ฝึกชุดนี้อีกครั้ง',
   'ui.run.trainAgain': 'ฝึกอีกครั้ง',
+  'ui.run.resultChart': 'กราฟผลการฝึก',
 
   'ui.train.title': 'ฝึกส่วนตัว',
   'ui.train.lead': 'โจทย์จะถูกเลือกจากผลการทำของคุณเอง เพื่อให้ใช้เวลากับสิ่งที่ต้องฝึกมากที่สุด',

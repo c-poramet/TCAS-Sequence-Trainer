@@ -72,6 +72,34 @@ export function mount(container, ctx) {
   if (bounds.min !== undefined) countAttrs.min = String(bounds.min);
   if (bounds.max !== undefined) countAttrs.max = String(bounds.max);
   const countInput = h('input', countAttrs);
+  const answerMode = h(
+    'select',
+    { id: 'train-answer-mode', class: 'train__input', name: 'answerMode' },
+    h('option', { value: 'typed' }, t('settings.answerMode.option.typed')),
+    h('option', { value: 'mc' }, t('settings.answerMode.option.mc')),
+  );
+  answerMode.value = getSetting('answerMode');
+  const mcChoices = h('input', {
+    id: 'train-mc-choices',
+    class: 'train__input',
+    name: 'mcChoices',
+    type: 'number',
+    min: '3',
+    max: '8',
+    step: '1',
+    value: String(getSetting('mcChoices')),
+  });
+  const mcChoicesField = h(
+    'div',
+    { class: 'train__option-field' },
+    h('label', { class: 'train__label', for: 'train-mc-choices' }, t('ui.train.choiceCount')),
+    mcChoices,
+  );
+  const syncChoiceVisibility = () => {
+    mcChoicesField.hidden = answerMode.value !== 'mc';
+  };
+  answerMode.addEventListener('change', syncChoiceVisibility);
+  syncChoiceVisibility();
 
   const error = h('p', { class: 'train__error', role: 'alert' }, t('ui.train.noBucket'));
   const start = h('button', { type: 'submit', class: 'train__start' }, t('ui.train.start'));
@@ -100,9 +128,10 @@ export function mount(container, ctx) {
         const raw = countInput.value.trim() === '' ? NaN : Number(countInput.value);
         let count = Number.isFinite(raw) ? Math.round(raw) : getSetting('trainer.count');
         count = Math.min(bounds.max ?? Infinity, Math.max(bounds.min ?? ENDLESS_COUNT, count));
+        const choiceCount = Math.min(8, Math.max(3, Math.round(Number(mcChoices.value) || getSetting('mcChoices'))));
         setSetting('trainer.buckets', selected);
         setSetting('trainer.count', count);
-        setHandoff({ kind: 'trainer', buckets: selected, count });
+        setHandoff({ kind: 'trainer', buckets: selected, count, answerMode: answerMode.value, mcChoices: choiceCount });
         ctx.navigate('#/run/trainer');
       },
     },
@@ -114,6 +143,13 @@ export function mount(container, ctx) {
       h('label', { class: 'train__label', for: 'train-count' }, t('ui.train.countLabel')),
       countInput,
       h('p', { class: 'train__help' }, t('ui.train.countHelp')),
+    ),
+    h(
+      'div',
+      { class: 'train__field train__options' },
+      h('label', { class: 'train__label', for: 'train-answer-mode' }, t('settings.answerMode.label')),
+      answerMode,
+      mcChoicesField,
     ),
     error,
     start,

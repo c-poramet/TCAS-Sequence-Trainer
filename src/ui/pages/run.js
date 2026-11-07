@@ -131,7 +131,12 @@ export function mount(container, ctx) {
         'section',
         { class: 'run', 'data-phase': 'error' },
         h('p', { class: 'run__error', role: 'alert' }, t(messageKey)),
-        h('nav', { class: 'run__links' }, h('a', { href: '#/' }, t('ui.nav.home')), h('a', { href: '#/generate' }, t('ui.nav.generate'))),
+        h(
+          'nav',
+          { class: 'run__links' },
+          h('button', { type: 'button', class: 'run__link', onclick: () => ctx.navigate('#/') }, t('ui.nav.home')),
+          h('button', { type: 'button', class: 'run__link', onclick: () => ctx.navigate('#/generate') }, t('ui.nav.generate')),
+        ),
       ),
     );
   }
@@ -151,7 +156,7 @@ export function mount(container, ctx) {
 
   function tick() {
     if (timerEl && session && session.phase === 'ask') {
-      timerEl.textContent = formatClock(session.run.elapsed());
+      timerEl.textContent = session.timerVisible ? formatClock(session.run.elapsed()) : '--:--';
     }
   }
 
@@ -318,8 +323,7 @@ export function mount(container, ctx) {
 
   function renderAsk() {
     const q = session.question;
-    timerEl = h('output', { class: 'run__timer', role: 'timer' }, formatClock(session.run.elapsed()));
-    timerEl.hidden = !session.timerVisible;
+    timerEl = h('output', { class: 'run__timer', role: 'timer' }, session.timerVisible ? formatClock(session.run.elapsed()) : '--:--');
     const timebox = h(
       'div',
       {
@@ -333,7 +337,7 @@ export function mount(container, ctx) {
     );
     const toggleTimer = () => {
       session.timerVisible = !session.timerVisible;
-      timerEl.hidden = !session.timerVisible;
+      timerEl.textContent = session.timerVisible ? formatClock(session.run.elapsed()) : '--:--';
       timebox.setAttribute('aria-pressed', String(session.timerVisible));
     };
     timebox.addEventListener('click', toggleTimer);
@@ -444,6 +448,7 @@ export function mount(container, ctx) {
     const average = attempts > 0 ? formatSeconds(tally.ms / attempts) : t('ui.run.noAverage');
     const isSet = ctx.segments[0] === 'set';
     const links = [];
+    const go = (hash) => () => ctx.navigate(hash);
     if (isSet) {
       links.push(
         h(
@@ -460,12 +465,12 @@ export function mount(container, ctx) {
         ),
       );
     } else {
-      links.push(h('a', { class: 'run__link', href: '#/train' }, t('ui.run.trainAgain')));
+      links.push(h('button', { type: 'button', class: 'run__link', onclick: go('#/train') }, t('ui.run.trainAgain')));
     }
     links.push(
-      h('a', { class: 'run__link', href: '#/stats' }, t('ui.nav.stats')),
-      h('a', { class: 'run__link', href: '#/generate' }, t('ui.nav.generate')),
-      h('a', { class: 'run__link', href: '#/' }, t('ui.nav.home')),
+      h('button', { type: 'button', class: 'run__link', onclick: go('#/stats') }, t('ui.nav.stats')),
+      h('button', { type: 'button', class: 'run__link', onclick: go('#/generate') }, t('ui.nav.generate')),
+      h('button', { type: 'button', class: 'run__link', onclick: go('#/') }, t('ui.nav.home')),
     );
     show(
       h(
@@ -484,6 +489,13 @@ export function mount(container, ctx) {
           h('dt', { class: 'run__term' }, t('ui.run.stats.average')),
           h('dd', { class: 'run__stat', 'data-stat': 'average' }, average),
         ),
+        h(
+          'div',
+          { class: 'run__result-chart', 'aria-label': t('ui.run.resultChart') },
+          h('label', {}, t('ui.run.stats.correct'), h('progress', { max: String(Math.max(1, attempts)), value: String(tally.correct) })),
+          h('label', {}, t('ui.run.stats.wrong'), h('progress', { max: String(Math.max(1, attempts)), value: String(tally.wrong) })),
+          h('label', {}, t('ui.run.stats.skipped'), h('progress', { max: String(Math.max(1, attempts)), value: String(tally.skipped) })),
+        ),
         h('nav', { class: 'run__links' }, ...links),
       ),
     );
@@ -498,7 +510,7 @@ export function mount(container, ctx) {
     else renderSummary();
   }
 
-  function startSession(run) {
+  function startSession(run, options = {}) {
     session = {
       key,
       run,
@@ -510,8 +522,8 @@ export function mount(container, ctx) {
       tally: { correct: 0, wrong: 0, skipped: 0, ms: 0 },
       timerVisible: Boolean(getSetting('showTimer')),
       solutionOpen: false,
-      answerMode: getSetting('answerMode'),
-      mcChoices: getSetting('mcChoices'),
+      answerMode: options.answerMode || getSetting('answerMode'),
+      mcChoices: options.mcChoices || getSetting('mcChoices'),
     };
     advance();
   }
@@ -551,6 +563,7 @@ export function mount(container, ctx) {
           answerMode: getSetting('answerMode'),
           maxRecords: getSetting('stats.maxRecords'),
         }),
+        { answerMode: handoff?.answerMode, mcChoices: handoff?.mcChoices },
       );
     } catch (err) {
       if (disposed) return;
@@ -584,9 +597,11 @@ export function mount(container, ctx) {
           source: 'trainer',
           provider,
           total: handoff.count || null,
-          answerMode: getSetting('answerMode'),
+          answerMode: handoff.answerMode || getSetting('answerMode'),
+          mcChoices: handoff.mcChoices || getSetting('mcChoices'),
           maxRecords: getSetting('stats.maxRecords'),
         }),
+        { answerMode: handoff.answerMode, mcChoices: handoff.mcChoices },
       );
     } catch (err) {
       fail(err);
