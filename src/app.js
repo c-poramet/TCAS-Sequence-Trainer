@@ -17,6 +17,7 @@ const PAGES = {
   settings: () => import('./ui/pages/settings.js'),
   lookup: () => import('./ui/pages/lookup.js'),
   print: () => import('./ui/pages/print.js'),
+  dev: () => import('./ui/pages/dev.js'),
 };
 
 /** First hash segment → page id. */
@@ -31,6 +32,7 @@ const ROUTES = new Map([
   ['lookup', 'lookup'],
   ['q', 'lookup'],
   ['print', 'print'],
+  ['dev', 'dev'],
 ]);
 
 /** Navigation entries, in display order. */
@@ -41,6 +43,7 @@ const NAV_ITEMS = [
   { id: 'stats', hash: '#/stats' },
   { id: 'lookup', hash: '#/lookup' },
   { id: 'settings', hash: '#/settings' },
+  { id: 'dev', hash: '#/dev' },
 ];
 
 /** @type {(() => void)|null} */

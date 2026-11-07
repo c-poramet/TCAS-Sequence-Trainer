@@ -455,6 +455,32 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 
 .app__error { padding: 16px; border-radius: var(--radius-md); background: var(--red-soft); color: var(--red-ink); }
 
+.dev { max-width: 1080px; margin: 0 auto; }
+.dev__lead { max-width: 75ch; color: var(--ink-soft); }
+.dev__pool-version, .dev__count { color: var(--ink-soft); font-size: var(--text-sm); }
+.dev__filters { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 12px; }
+.dev__search { flex: 1 1 260px; min-width: 200px; }
+.dev__filter { min-width: 170px; }
+.dev__entries { display: grid; gap: 10px; }
+.dev__entry { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--bg-raised); }
+.dev__entry-summary { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; list-style: none; }
+.dev__entry-summary::-webkit-details-marker { display: none; }
+.dev__entry-summary::before { content: '+'; width: 20px; color: var(--ink-soft); font-size: 20px; line-height: 1; }
+.dev__entry[open] .dev__entry-summary::before { content: '−'; }
+.dev__entry-id { flex: 1; overflow-wrap: anywhere; }
+.dev__entry-tier { color: var(--ink-soft); font-size: var(--text-sm); }
+.dev__entry-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .7fr); gap: 16px 24px; padding: 0 20px 20px 48px; }
+.dev__meta { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; padding: 14px; border-radius: var(--radius-md); background: var(--bg-sunken); }
+.dev__meta dt { color: var(--ink-soft); }
+.dev__meta dd { margin: 0; font-weight: 600; }
+.dev__sample-label { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.dev__formula { min-height: 48px; overflow-x: auto; padding: 12px 0; }
+.dev__formula .katex-display { margin: 0; text-align: left; }
+.dev__definition { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
+.dev__validation { grid-column: 1 / -1; margin: 0; font-weight: 600; }
+.dev__validation--ok { color: var(--green-ink); }
+.dev__validation--error { color: var(--red-ink); white-space: pre-wrap; }
+
 @media (max-width: 680px) {
   #app-header { padding: 12px 16px; }
   #nav { flex-wrap: wrap; gap: 8px; }
@@ -482,6 +508,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
     gap: 6px;
   }
   .settings__import label:not(:first-child) { margin-top: 6px; }
+  .dev__entry-body { grid-template-columns: 1fr; padding-left: 20px; }
+  .dev__entry-tier { display: none; }
 }
 
 @media print {
