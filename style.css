@@ -253,15 +253,51 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .gen__actions { margin-bottom: 28px; }
 .gen__list-title { padding-top: 24px; margin-bottom: 12px; border-top: 1px solid var(--line); font-size: var(--text-lg); }
 .gen__list, .run__choices, .stats__bucket-list { padding-left: 28px; }
-.gen__row { padding: 20px 0; border-bottom: 1px solid var(--line); }
-.gen__row:first-child { padding-top: 8px; }
-.gen__row:last-child { border-bottom: 0; }
-.gen__row-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.gen__qid { font-weight: 600; }
-.gen__qr { flex: 0 0 auto; padding: 6px; border-radius: var(--radius-sm); background: var(--bg-sunken); line-height: 0; }
-.gen__qr svg { width: 64px; height: 64px; }
-.gen__choices, .print__choices { padding-left: 24px; color: var(--ink-soft); }
-.gen__choice { padding: 2px 6px; }
+.gen__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-1);
+}
+.gen__row-content { min-width: 0; }
+.gen__row-head { display: flex; align-items: center; min-height: 36px; margin-bottom: 14px; }
+.gen__qid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--bg-raised);
+  font-weight: 600;
+  text-decoration: none;
+}
+.gen__qid:hover { color: var(--bg-raised); background: var(--yellow-ink); }
+.gen__qr { align-self: center; padding: 8px; border-radius: var(--radius-sm); background: var(--bg-sunken); line-height: 0; }
+.gen__qr svg { width: 128px; height: 128px; }
+.gen__choices, .print__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 16px 0 0;
+  color: var(--ink-soft);
+  list-style: none;
+}
+.gen__choice {
+  min-width: 72px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  text-align: center;
+}
 .gen__check, .settings__option, .run__choice { display: inline-flex; align-items: center; gap: 8px; }
 .gen__more { display: block; margin: 20px auto 0; }
 .gen__copy-status, .settings__status { color: var(--green-ink); }
@@ -356,6 +392,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   .gen__setid-row { grid-template-columns: minmax(0, 1fr) auto auto; }
   .gen__setid-row .gen__input { grid-column: 1; }
   .gen__setid-row .gen__copy-status { grid-column: 1 / -1; justify-self: start; }
+  .gen__row { grid-template-columns: 1fr; gap: 16px; }
+  .gen__qr { justify-self: start; }
   .settings__help { grid-column: auto; }
   .settings__tools { align-items: stretch; }
   .settings__tools > .settings__button { flex: 1 1 140px; }

@@ -121,19 +121,31 @@ function questionRow(q, number) {
     { class: 'gen__row', 'data-qid': q.id, 'data-mode': q.mode },
     h(
       'div',
-      { class: 'gen__row-head' },
-      h('a', { class: 'gen__qid', href: '#/q/' + encodeURIComponent(q.id) }, t('ui.generate.questionNumber', { number })),
-      h('span', { class: 'gen__qr' }, renderQr(q.id, t('print.questionQrLabel'))),
+      { class: 'gen__row-content' },
+      h(
+        'div',
+        { class: 'gen__row-head' },
+        h(
+          'a',
+          {
+            class: 'gen__qid',
+            href: '#/q/' + encodeURIComponent(q.id),
+            'aria-label': t('ui.generate.questionNumber', { number }),
+          },
+          String(number),
+        ),
+      ),
+      renderSequence(
+        q.terms.map((v, i) => (i + 1 === q.missing ? null : v)),
+        { missing: q.missing },
+      ),
+      h(
+        'ol',
+        { class: 'gen__choices' },
+        choices.map((value) => h('li', { class: 'gen__choice' }, String(value))),
+      ),
     ),
-    renderSequence(
-      q.terms.map((v, i) => (i + 1 === q.missing ? null : v)),
-      { missing: q.missing },
-    ),
-    h(
-      'ol',
-      { class: 'gen__choices' },
-      choices.map((value) => h('li', { class: 'gen__choice' }, String(value))),
-    ),
+    h('span', { class: 'gen__qr' }, renderQr(q.id, t('print.questionQrLabel'))),
   );
 }
 
