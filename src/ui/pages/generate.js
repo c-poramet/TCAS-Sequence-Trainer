@@ -132,7 +132,7 @@ function questionRow(q, number) {
     h(
       'ol',
       { class: 'gen__choices' },
-      choices.map((value, i) => h('li', { class: 'gen__choice' }, `${i + 1}. ${value}`)),
+      choices.map((value) => h('li', { class: 'gen__choice' }, String(value))),
     ),
   );
 }
