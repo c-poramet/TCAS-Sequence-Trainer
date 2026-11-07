@@ -51,21 +51,33 @@ export function renderPrintView(container, { setId, questions, options }) {
 
   const list = h('ol', { class: 'print__list' });
   questions.forEach((q, i) => {
-    const parts = [
-      h('div', { class: 'print__q-head' },
-        h('div', {}, h('span', { class: 'print__q-number' }, `${i + 1}`), h('code', { class: 'print__qid' }, q.id)),
-        h('div', { class: 'print__qr print__question-qr' }, renderQr(q.id, t('print.questionQrLabel')))),
+    const content = h(
+      'div',
+      { class: 'print__q-content' },
+      h(
+        'div',
+        { class: 'print__q-head' },
+        h('span', { class: 'print__q-number' }, `${i + 1}`),
+        h('code', { class: 'print__qid' }, q.id),
+      ),
       renderSequence(maskedTerms(q), { missing: q.missing }),
-    ];
-    parts.push(
-      h('ol', { class: 'print__choices' },
+      h(
+        'ol',
+        { class: 'print__choices' },
         choiceSets[i].choices.map((value, k) =>
           h('li', { class: 'print__choice', 'data-index': String(k) },
             h('span', { class: 'print__choice-label' }, choiceLabel(k)),
-            ' ',
-            h('span', { class: 'print__choice-value' }, String(value))))),
+            h('span', { class: 'print__choice-value' }, String(value)))),
+      ),
     );
-    list.appendChild(h('li', { class: 'print__q', 'data-qid': q.id }, parts));
+    list.appendChild(
+      h(
+        'li',
+        { class: 'print__q', 'data-qid': q.id },
+        content,
+        h('div', { class: 'print__qr print__question-qr' }, renderQr(q.id, t('print.questionQrLabel'))),
+      ),
+    );
   });
   fragment.appendChild(list);
 
