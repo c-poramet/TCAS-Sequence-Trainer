@@ -69,6 +69,7 @@ export const SCHEMA = Object.freeze([
   entry('mcChoices', 'int', 5, { min: 3, max: 8 }),
   entry('showTimer', 'bool', true),
   entry('gen.count', 'int', 20, { min: 1, max: 5000 }),
+  entry('gen.termCount', 'int', 6, { min: 6, max: 12 }),
   entry('gen.maxSetSize', 'int', 2000, { min: 1, max: 5000 }),
   entry('gen.hardRatio', 'float', 0.25, { min: 0, max: 1 }),
   entry('gen.mixedChance', 'float', 0.5, { min: 0, max: 1 }),

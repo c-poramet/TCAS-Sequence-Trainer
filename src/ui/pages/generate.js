@@ -28,6 +28,7 @@ const FIXED_KEYS = [
   'composeChance',
   'minDistinct',
   'allowNegative',
+  'termCount',
 ];
 
 function readGenerateReturn() {

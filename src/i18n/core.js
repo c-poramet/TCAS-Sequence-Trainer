@@ -46,6 +46,8 @@ registerStrings('en', {
   'settings.showTimer.help': 'Show the running timer while you solve a question. Your time is recorded even when the timer is hidden.',
 
   'settings.gen.count.label': 'Questions per set',
+  'settings.gen.termCount.label': 'Terms per question',
+  'settings.gen.termCount.help': 'Number of terms shown in each generated question (6 to 12).',
   'settings.gen.count.help': 'How many questions a new set contains (from 1 up to the maximum set size).',
   'settings.gen.maxSetSize.label': 'Maximum set size',
   'settings.gen.maxSetSize.help': 'Upper limit for the number of questions in one set.',
@@ -139,6 +141,8 @@ registerStrings('th', {
   'settings.showTimer.help': 'แสดงเวลาที่ใช้ระหว่างทำโจทย์ ระบบยังบันทึกเวลาไว้แม้จะซ่อนตัวจับเวลา',
 
   'settings.gen.count.label': 'จำนวนข้อต่อชุด',
+  'settings.gen.termCount.label': 'จำนวนพจน์ต่อข้อ',
+  'settings.gen.termCount.help': 'จำนวนพจน์ในโจทย์แต่ละข้อ (6 ถึง 12)',
   'settings.gen.count.help': 'จำนวนข้อในชุดโจทย์ใหม่ (ตั้งแต่ 1 ถึงขนาดชุดสูงสุด)',
   'settings.gen.maxSetSize.label': 'ขนาดชุดสูงสุด',
   'settings.gen.maxSetSize.help': 'จำนวนข้อสูงสุดที่อนุญาตในหนึ่งชุด',

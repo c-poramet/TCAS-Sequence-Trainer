@@ -184,9 +184,11 @@ export function mount(container, ctx) {
   let unmounted = false;
 
   const status = h('p', { class: 'settings__status', id: 'settings-status', role: 'status', 'aria-live': 'polite' });
+  status.hidden = true;
   /** @param {string} message */
   const say = (message) => {
     status.textContent = message;
+    status.hidden = !message;
   };
 
   /** @type {Map<string, HTMLElement[]>} */

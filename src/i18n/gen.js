@@ -13,7 +13,7 @@ registerStrings('en', {
   'gen.which.even': 'even positions (n = 2, 4, 6)',
   'gen.which.all': 'all positions',
   'gen.step.sequence':
-    'The sequence has 6 terms at positions n = 1 to 6. The term at position n = {missing} is missing:',
+    'The sequence has {termCount} terms at positions n = 1 to {termCount}. The term at position n = {missing} is missing:',
   'gen.step.oneRule': 'A single rule produces every term of the sequence.',
   'gen.step.oddEvenSplit':
     'This sequence mixes two rules: one for odd positions and one for even positions. Splitting the terms by position:',
@@ -42,7 +42,7 @@ registerStrings('th', {
   'gen.which.even': 'ตำแหน่งคู่ (n = 2, 4, 6)',
   'gen.which.all': 'ทุกตำแหน่ง',
   'gen.step.sequence':
-    'ลำดับมี 6 พจน์ที่ตำแหน่ง n = 1 ถึง 6 โดยพจน์ที่ตำแหน่ง n = {missing} หายไป:',
+    'ลำดับมี {termCount} พจน์ที่ตำแหน่ง n = 1 ถึง {termCount} โดยพจน์ที่ตำแหน่ง n = {missing} หายไป:',
   'gen.step.oneRule': 'ลำดับนี้ใช้กฎเพียงข้อเดียวกับทุกพจน์',
   'gen.step.oddEvenSplit':
     'ลำดับนี้ผสมกฎสองข้อ ข้อหนึ่งใช้กับตำแหน่งคี่ อีกข้อหนึ่งใช้กับตำแหน่งคู่ เมื่อแยกพจน์ตามตำแหน่งจะได้:',

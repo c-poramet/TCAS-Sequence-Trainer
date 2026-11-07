@@ -188,6 +188,7 @@ export function getGenConfig({ poolVersion }) {
   return {
     hardRatio: getSetting('gen.hardRatio'),
     mixedChance: getSetting('gen.mixedChance'),
+    termCount: getSetting('gen.termCount'),
     cap: getSetting('gen.cap'),
     maxAttempts: getSetting('gen.maxAttempts'),
     poolVersion: pinned === null ? poolVersion : Math.min(pinned, poolVersion),

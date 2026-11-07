@@ -11,7 +11,7 @@ import { oeisDefinition } from '../pool/oeis.js';
 
 /** @typedef {{f:string, p:number[]}} Leaf */
 /** @typedef {Leaf | {o:Leaf, i:Leaf}} Expr */
-/** @typedef {{v:number, mode:'N'|'H', missing:number, rules:Expr[]}} Descriptor */
+/** @typedef {{v:number, mode:'N'|'H', missing:number, termCount?:number, rules:Expr[]}} Descriptor */
 /** @typedef {{id:string, descriptor:Descriptor, terms:number[], missing:number, answer:number, fns:string[], mode:'N'|'H', mixed:boolean}} Question */
 /** @typedef {{key:string, params?:Record<string,string|number>, math?:string[]}} Step */
 /** @typedef {{titleKey:string, titleParams?:Record<string,string|number>, steps:Step[]}} Section */
@@ -43,7 +43,7 @@ export class RebuildError extends Error {
 }
 
 /** Number of terms in every question (structural, fixed by the exam format). */
-const TERM_COUNT = 6;
+const DEFAULT_TERM_COUNT = 6;
 /** Default number of questions generated between event-loop yields (contract). */
 const DEFAULT_CHUNK = 50;
 const MODE_NORMAL = 'N';
@@ -102,7 +102,8 @@ function ruleIndexOf(n, ruleCount) {
  * @returns {boolean} whether the terms satisfy every acceptance rule
  */
 function acceptable(terms, cfg) {
-  if (terms.length !== TERM_COUNT) return false;
+  const termCount = cfg.termCount ?? DEFAULT_TERM_COUNT;
+  if (terms.length !== termCount) return false;
   for (const v of terms) {
     if (!Number.isSafeInteger(v) || Math.abs(v) > cfg.cap) return false;
     if (v < 0 && !cfg.allowNegative) return false;
@@ -254,9 +255,9 @@ export function createEngine({ pool }) {
    * @param {Expr[]} rules
    * @returns {number[]|null} the 6 true terms, or null if any is undefined / unsafe
    */
-  function computeTerms(rules) {
+  function computeTerms(rules, termCount) {
     const terms = [];
-    for (let n = 1; n <= TERM_COUNT; n++) {
+    for (let n = 1; n <= termCount; n++) {
       const v = exprValue(rules[ruleIndexOf(n, rules.length)], n);
       if (typeof v !== 'number' || !Number.isSafeInteger(v)) return null;
       terms.push(v + 0); // normalises -0
@@ -373,7 +374,8 @@ export function createEngine({ pool }) {
    * @returns {Question|null}
    */
   function attempt(rng, mode, cfg, plan) {
-    const missing = rng.int(1, TERM_COUNT);
+    const termCount = cfg.termCount ?? DEFAULT_TERM_COUNT;
+    const missing = rng.int(1, termCount);
     const mixed = rng.chance(cfg.mixedChance);
     const ruleCount = mixed ? 2 : 1;
     const target = plan ? rng.int(0, ruleCount - 1) : -1;
@@ -384,9 +386,9 @@ export function createEngine({ pool }) {
       rules.push(rule);
     }
     if (mixed && exprKey(rules[0]) === exprKey(rules[1])) return null;
-    const terms = computeTerms(rules);
+    const terms = computeTerms(rules, termCount);
     if (!terms || !acceptable(terms, cfg)) return null;
-    return assemble({ v: cfg.poolVersion, mode, missing, rules }, terms);
+    return assemble({ v: cfg.poolVersion, mode, missing, termCount, rules }, terms);
   }
 
   /**
@@ -420,7 +422,9 @@ export function createEngine({ pool }) {
     if (!d || typeof d !== 'object') throw bad('not an object');
     if (!Number.isInteger(d.v) || d.v < 1) throw bad('version');
     if (d.mode !== MODE_NORMAL && d.mode !== MODE_HARD) throw bad('mode');
-    if (!Number.isInteger(d.missing) || d.missing < 1 || d.missing > TERM_COUNT) throw bad('missing');
+    const termCount = d.termCount ?? DEFAULT_TERM_COUNT;
+    if (!Number.isInteger(termCount) || termCount < 6 || termCount > 12) throw bad('termCount');
+    if (!Number.isInteger(d.missing) || d.missing < 1 || d.missing > termCount) throw bad('missing');
     if (!Array.isArray(d.rules) || d.rules.length < 1 || d.rules.length > 2) throw bad('rules');
     for (const rule of d.rules) {
       if (!rule || typeof rule !== 'object') throw bad('rule');
@@ -447,9 +451,10 @@ export function createEngine({ pool }) {
     const rules = descriptor.rules.map((r) =>
       isComposition(r) ? { o: clone(r.o), i: clone(r.i) } : clone(r),
     );
-    const d = { v: descriptor.v, mode: descriptor.mode, missing: descriptor.missing, rules };
-    const terms = computeTerms(rules);
-    if (!terms) throw new RebuildError('Descriptor does not produce six integer terms');
+    const termCount = descriptor.termCount ?? DEFAULT_TERM_COUNT;
+    const d = { v: descriptor.v, mode: descriptor.mode, missing: descriptor.missing, termCount, rules };
+    const terms = computeTerms(rules, termCount);
+    if (!terms) throw new RebuildError('Descriptor does not produce valid integer terms');
     return assemble(d, terms);
   }
 
@@ -521,12 +526,13 @@ export function createEngine({ pool }) {
    */
   function buildSolution(question) {
     const { rules, missing } = question.descriptor;
+    const termCount = question.terms.length;
     const terms = question.terms;
     const ruleCount = rules.length;
     const mixed = ruleCount === 2;
     const whichOf = (r) => (mixed ? (r === 0 ? 'odd' : 'even') : 'all');
     const positionsOf = (r) =>
-      Array.from({ length: TERM_COUNT }, (_, k) => k + 1).filter((n) => ruleIndexOf(n, ruleCount) === r);
+      Array.from({ length: termCount }, (_, k) => k + 1).filter((n) => ruleIndexOf(n, ruleCount) === r);
     const pointsOf = (r) =>
       positionsOf(r)
         .filter((n) => n !== missing)
@@ -540,7 +546,7 @@ export function createEngine({ pool }) {
     // 1. Given
     const seqMath = terms.map((v, k) => (k + 1 === missing ? '?' : String(v))).join(',\\ ');
     /** @type {Step[]} */
-    const given = [{ key: 'gen.step.sequence', params: { missing }, math: [seqMath] }];
+    const given = [{ key: 'gen.step.sequence', params: { missing, termCount }, math: [seqMath] }];
     if (mixed) {
       given.push({
         key: 'gen.step.oddEvenSplit',

@@ -10,7 +10,7 @@ export const ALGO_VERSION = 1;
 
 /** Order of the values inside a Set ID payload. */
 export const GEN_KEYS = Object.freeze([
-  'seed', 'count', 'hardRatio', 'mixedChance', 'cap', 'maxAttempts', 'poolVersion',
+  'seed', 'count', 'hardRatio', 'mixedChance', 'termCount', 'cap', 'maxAttempts', 'poolVersion',
   'normalTiers', 'composeTiers', 'rareTiers', 'composeChance', 'minDistinct', 'allowNegative',
 ]);
 
@@ -106,13 +106,18 @@ export function encodeQuestionId(descriptor) {
   if (!isPlainObject(d)) throw new IdError('Descriptor must be an object');
   if (!Number.isSafeInteger(d.v) || d.v < 1) throw new IdError('Descriptor version must be an integer >= 1');
   if (d.mode !== 'N' && d.mode !== 'H') throw new IdError('Descriptor mode must be N or H');
-  if (!Number.isInteger(d.missing) || d.missing < MISSING_MIN || d.missing > MISSING_MAX) {
-    throw new IdError('Descriptor missing must be an integer 1..6');
+  const termCount = d.termCount ?? 6;
+  if (!Number.isInteger(termCount) || termCount < 6 || termCount > 12) {
+    throw new IdError('Descriptor term count must be an integer 6..12');
+  }
+  if (!Number.isInteger(d.missing) || d.missing < MISSING_MIN || d.missing > termCount) {
+    throw new IdError(    'Descriptor missing must be an integer 1..12');
   }
   if (!Array.isArray(d.rules) || d.rules.length < 1 || d.rules.length > MAX_RULES) {
     throw new IdError('Descriptor must have 1 or 2 rules');
   }
-  return `Q${d.v}:${d.mode}${d.missing}:${d.rules.map(encodeExpr).join('|')}`;
+  const suffix = d.termCount === undefined || d.termCount === 6 ? '' : `:T${d.termCount}`;
+  return `Q${d.v}:${d.mode}${d.missing}:${d.rules.map(encodeExpr).join('|')}${suffix}`;
 }
 
 /**
@@ -185,7 +190,7 @@ export function decodeQuestionId(id) {
   const missingChar = s[i];
   if (!isDigit(missingChar)) fail('missing must be a digit');
   const missing = Number(missingChar);
-  if (missing < MISSING_MIN || missing > MISSING_MAX) fail('missing must be 1..6');
+  if (missing < MISSING_MIN || missing > MISSING_MAX) fail('missing must be 1..12');
   i++;
   expect(':');
   const rules = [parseExpr()];
@@ -194,8 +199,19 @@ export function decodeQuestionId(id) {
     rules.push(parseExpr());
     if (s[i] === '|') fail('more than 2 rules');
   }
+  let termCount = 6;
+  if (s[i] === ':') {
+    i++;
+    if (s.slice(i, i + 1) !== 'T') fail('expected term count');
+    i++;
+    const start = i;
+    while (isDigit(s[i])) i++;
+    if (i === start) fail('term count must be numeric');
+    termCount = Number(s.slice(start, i));
+    if (!Number.isInteger(termCount) || termCount < 6 || termCount > 12) fail('term count must be 6..12');
+  }
   if (i !== s.length) fail('unexpected trailing characters');
-  return { v, mode, missing, rules };
+  return { v, mode, missing, ...(termCount === 6 ? {} : { termCount }), rules };
 }
 
 /**
@@ -299,6 +315,7 @@ function normalizeGenSettings(s) {
   const checks = [
     ['seed', typeof s.seed === 'string' && s.seed.length >= SEED_MIN_LENGTH && s.seed.length <= SEED_MAX_LENGTH],
     ['count', inSchemaRange('gen.maxSetSize', s.count, 'int') && s.count >= 1],
+    ['termCount', inSchemaRange('gen.termCount', s.termCount ?? 6, 'int')],
     ['hardRatio', inSchemaRange('gen.hardRatio', s.hardRatio, 'float')],
     ['mixedChance', inSchemaRange('gen.mixedChance', s.mixedChance, 'float')],
     ['cap', inSchemaRange('gen.cap', s.cap, 'int')],
@@ -315,6 +332,7 @@ function normalizeGenSettings(s) {
   /** @type {Record<string, any>} */
   const out = {};
   for (const key of GEN_KEYS) out[key] = Array.isArray(s[key]) ? s[key].slice() : s[key];
+  if (out.termCount === undefined) out.termCount = 6;
   return out;
 }
 
@@ -364,14 +382,17 @@ export function decodeSetId(sid) {
   } catch {
     return fail('payload is not valid UTF-8 JSON');
   }
-  if (!Array.isArray(values) || values.length !== GEN_KEYS.length) fail('payload has the wrong shape');
+  if (!Array.isArray(values) || (values.length !== GEN_KEYS.length && values.length !== GEN_KEYS.length - 1)) fail('payload has the wrong shape');
+  const legacy = values.length === GEN_KEYS.length - 1;
+  if (legacy) values.splice(4, 0, 6);
   /** @type {Record<string, any>} */
   const raw = {};
   GEN_KEYS.forEach((key, index) => {
     raw[key] = values[index];
   });
   const settings = normalizeGenSettings(raw);
-  if (encodeSetId(settings, algo) !== sid) fail('non-canonical encoding');
+  if (settings.termCount === 6) delete settings.termCount;
+  if (!legacy && encodeSetId(settings, algo) !== sid) fail('non-canonical encoding');
   return { algo, settings };
 }
 
