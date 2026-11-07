@@ -7,11 +7,12 @@ import { SCHEMA } from '../../core/schema.js';
 import { generateSet, generateSetFromId, GenerationError } from '../../gen/generator.js';
 import { getChoices } from '../../gen/choices.js';
 import { POOL_VERSION } from '../../pool/index.js';
-import { setHandoff } from '../handoff.js';
+import { setHandoff, takeHandoff } from '../handoff.js';
 import { questionSolutionUrl, renderQr } from '../../core/qr.js';
 
 /** Number of question rows appended per "show more" click. */
 const PAGE_SIZE = 50;
+const GENERATE_RETURN_KEY = 'tcas-generate-return';
 /** Smallest allowed set size. */
 const MIN_COUNT = 1;
 /** How long the "copied" notice stays visible (ms). */
@@ -28,6 +29,19 @@ const FIXED_KEYS = [
   'minDistinct',
   'allowNegative',
 ];
+
+function readGenerateReturn() {
+  const handoff = takeHandoff();
+  if (handoff && handoff.kind === 'generate-return') return handoff;
+  try {
+    const stored = sessionStorage.getItem(GENERATE_RETURN_KEY);
+    sessionStorage.removeItem(GENERATE_RETURN_KEY);
+    const value = stored ? JSON.parse(stored) : null;
+    return value && value.kind === 'generate-return' ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Numeric bounds of a schema key (undefined when not numeric).
@@ -114,7 +128,7 @@ function printHash(sid, answers, solutions) {
  * @param {number} number
  * @returns {HTMLElement}
  */
-function questionRow(q, number) {
+function questionRow(q, number, onOpen) {
   const { choices } = getChoices(q, getSetting('mcChoices'));
   return h(
     'li',
@@ -129,8 +143,9 @@ function questionRow(q, number) {
           'a',
           {
             class: 'gen__qid',
-            href: '#/q/' + encodeURIComponent(q.id),
+            href: '#/q/' + encodeURIComponent(q.id) + '?back=generate',
             'aria-label': t('ui.generate.questionNumber', { number }),
+            onclick: () => onOpen(),
           },
           String(number),
         ),
@@ -186,6 +201,8 @@ export function mount(container, ctx) {
     autocomplete: 'off',
     spellcheck: 'false',
   });
+  const restore = readGenerateReturn();
+  const restoreGenerate = restore && restore.kind === 'generate-return' ? restore : null;
 
   const field = (id, labelKey, input, helpKey, helpParams) =>
     h(
@@ -310,7 +327,7 @@ export function mount(container, ctx) {
    * @param {Array<{id:string, terms:number[], missing:number, mode:string}>} questions
    * @returns {void}
    */
-  function showResult(sid, settings, questions) {
+  function showResult(sid, settings, questions, initialShown = 0) {
     clear(resultEl);
 
     const sidInput = h('input', {
@@ -355,11 +372,35 @@ export function mount(container, ctx) {
 
     const list = h('ol', { class: 'gen__list', 'aria-label': t('ui.generate.listLabel') });
     const more = h('button', { type: 'button', class: 'gen__more' });
-    let shown = 0;
+    let shown = Math.min(Math.max(0, initialShown), questions.length);
     const renderMore = () => {
+      const start = shown;
       const end = Math.min(shown + PAGE_SIZE, questions.length);
       const frag = document.createDocumentFragment();
-      for (let i = shown; i < end; i += 1) frag.append(questionRow(questions[i], i + 1));
+      for (let i = start; i < end; i += 1) {
+        frag.append(questionRow(questions[i], i + 1, () => {
+          const snapshot = {
+            kind: 'generate-return',
+            sid,
+            settings,
+            questions,
+            shown,
+            form: {
+              count: countInput.value,
+              hardRatio: hardInput.value,
+              mixedChance: mixedInput.value,
+              seed: seedInput.value,
+            },
+            scrollY: window.scrollY,
+          };
+          setHandoff(snapshot);
+          try {
+            sessionStorage.setItem(GENERATE_RETURN_KEY, JSON.stringify(snapshot));
+          } catch {
+            // The in-memory handoff remains sufficient when storage is unavailable.
+          }
+        }));
+      }
       list.append(frag);
       shown = end;
       const remaining = questions.length - shown;
@@ -405,8 +446,20 @@ export function mount(container, ctx) {
       list,
       more,
     );
-    renderMore();
+    if (initialShown > 0) {
+      let rendered = 0;
+      while (rendered < initialShown) {
+        const before = shown;
+        shown = rendered;
+        renderMore();
+        rendered = shown;
+        if (shown === before) break;
+      }
+    } else {
+      renderMore();
+    }
     resultEl.hidden = false;
+    if (restoreGenerate) requestAnimationFrame(() => window.scrollTo(0, restoreGenerate.scrollY));
   }
 
   /**
@@ -452,6 +505,7 @@ export function mount(container, ctx) {
           { count: countInput.value, hardRatio: hardInput.value, mixedChance: mixedInput.value, seed: seedInput.value },
           limits,
         );
+
         if (!parsed.ok) {
           showError(parsed.errorKey);
           return;
@@ -492,6 +546,12 @@ export function mount(container, ctx) {
   );
 
   renderFixed(getGenConfig({ poolVersion: POOL_VERSION }));
+
+  if (restoreGenerate) {
+    fillForm(restoreGenerate.form);
+    renderFixed(restoreGenerate.settings);
+    showResult(restoreGenerate.sid, restoreGenerate.settings, restoreGenerate.questions, restoreGenerate.shown);
+  }
 
   const routeSid = ctx.segments[0];
   if (routeSid !== undefined) {

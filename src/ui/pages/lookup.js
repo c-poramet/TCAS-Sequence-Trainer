@@ -138,6 +138,9 @@ export function mount(container, ctx) {
       console.error(err);
       solutionBox.append(h('p', { class: 'lookup__error', role: 'alert' }, t('ui.error.generic')));
     }
+    const back = ctx.query.get('back') === 'generate'
+      ? h('button', { type: 'button', class: 'lookup__back', onclick: () => ctx.navigate('#/generate') }, t('ui.lookup.backToGenerate'))
+      : null;
 
     const meta = [
       ['mode', t('ui.lookup.mode.' + q.mode)],
@@ -160,6 +163,7 @@ export function mount(container, ctx) {
         h('div', { class: 'lookup__sequence' }, seq),
         h('dl', { class: 'lookup__meta' }, ...rows),
         h('h2', { class: 'lookup__heading' }, t('ui.lookup.solutionHeading')),
+        back,
         solutionBox,
       ),
     );

@@ -19,3 +19,11 @@ export function takeHandoff() {
   slot = null;
   return value;
 }
+
+/**
+ * Read the stored handoff without consuming it.
+ * @returns {object|null}
+ */
+export function peekHandoff() {
+  return slot;
+}
