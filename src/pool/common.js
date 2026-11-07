@@ -57,72 +57,72 @@ const COMMON_ENTRIES = [
   make({ id: 'poly.lin', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [2, 1], sample: (g, c) => c.role === 'outer' ? [r(g, 1, 4), r(g, -2, 3)] : [r(g, 1, 5), r(g, -5, 5)],
     eval: (p, n) => p[0] * n + p[1], normalize: (p) => ({ m: p[0], b: p[1] }),
-    latex: (p, x) => `${p[0] === 1 ? '' : p[0]}${x}${add('', p[1])}`, detect: () => 'The first differences are constant.', substitute: (p, n) => `${p[0]}\\cdot${n}${add('', p[1])}`,
+    latex: (p, x) => `${p[0] === 1 ? '' : p[0]}${x}${add('', p[1])}`, detect: (p) => `f(n+1)-f(n)=${p[0]}`, substitute: (p, n) => `${p[0]}\\cdot${n}${add('', p[1])}`,
   }),
   make({ id: 'poly.quad', since: 1, tier: 1, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 0, 0], sample: (g) => [r(g, -2, 3), r(g, -2, 3), r(g, -3, 3)],
     eval: (p, n) => p[0] * n * n + p[1] * n + p[2], normalize: (p) => ({ a: p[0], b: p[1], c: p[2] }),
-    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: () => 'The second differences are constant.', substitute: (p, n) => `${p[0]}\\cdot${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
+    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => `${p[0]}\\cdot${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
   }),
   make({ id: 'geo.pure', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 2], sample: (g, c) => [r(g, 1, 4), r(g, 2, 3)],
     eval: (p, n) => p[0] * p[1] ** (n - 1), normalize: (p) => ({ first: p[0], ratio: p[1] }),
-    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}`, detect: () => 'Each term has a constant ratio to the next.', substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}`,
+    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}`, detect: (p) => `\\frac{f(n+1)}{f(n)}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}`,
   }),
   make({ id: 'poly.shift_sq', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 0], sample: (g) => [r(g, -2, 3), r(g, -3, 3)],
     eval: (p, n) => (n + p[0]) ** 2 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{2}${signed(p[1])}`, detect: () => 'Subtract a constant and compare consecutive squares.', substitute: (p, n) => `(${n}${signed(p[0])})^{2}${signed(p[1])}`,
+    latex: (p, x) => `(${x}${signed(p[0])})^{2}${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=(n${signed(p[0])})^{2}`, substitute: (p, n) => `(${n}${signed(p[0])})^{2}${signed(p[1])}`,
   }),
   make({ id: 'poly.shift_cube', since: 1, tier: 1, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [0, 0], sample: (g) => [r(g, -1, 2), r(g, -2, 2)],
     eval: (p, n) => (n + p[0]) ** 3 + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `(${x}${signed(p[0])})^{3}${signed(p[1])}`, detect: () => 'Subtract a constant and compare consecutive cubes.', substitute: (p, n) => `(${n}${signed(p[0])})^{3}${signed(p[1])}`,
+    latex: (p, x) => `(${x}${signed(p[0])})^{3}${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=(n${signed(p[0])})^{3}`, substitute: (p, n) => `(${n}${signed(p[0])})^{3}${signed(p[1])}`,
   }),
   make({ id: 'seq.triangular', since: 1, tier: 1, composable: true, arity: 1, maxIndex: 60 }, {
     fallback: [0], sample: (g) => [r(g, -2, 3)],
     eval: (p, n) => n * (n + 1) / 2 + p[0], normalize: (p) => ({ add: p[0] }),
-    latex: (p, x) => `${x}(${x}+1)/2${signed(p[0])}`, detect: () => 'The successive differences increase by 1.', substitute: (p, n) => `${n}(${n}+1)/2${signed(p[0])}`,
+    latex: (p, x) => `${x}(${x}+1)/2${signed(p[0])}`, detect: () => `\\Delta f(n+1)-\\Delta f(n)=1`, substitute: (p, n) => `${n}(${n}+1)/2${signed(p[0])}`,
   }),
   make({ id: 'poly.cubic', since: 1, tier: 2, composable: true, arity: 4, maxIndex: 60 }, {
     fallback: [1, 0, 0, 0], sample: (g) => [r(g, -1, 2), r(g, -2, 2), r(g, -2, 2), r(g, -2, 2)],
     eval: (p, n) => p[0] * n ** 3 + p[1] * n ** 2 + p[2] * n + p[3], normalize: (p) => ({ a: p[0], b: p[1], c: p[2], d: p[3] }),
-    latex: (p, x) => `${p[0]}${x}^{3}${signed(p[1])}${x}^{2}${signed(p[2])}${x}${signed(p[3])}`, detect: () => 'The third differences are constant.', substitute: (p, n) => `${p[0]}${n}^{3}${signed(p[1])}${n}^{2}${signed(p[2])}${n}${signed(p[3])}`,
+    latex: (p, x) => `${p[0]}${x}^{3}${signed(p[1])}${x}^{2}${signed(p[2])}${x}${signed(p[3])}`, detect: (p) => `\\Delta^{3}f(n)=${6 * p[0]}`, substitute: (p, n) => `${p[0]}${n}^{3}${signed(p[1])}${n}^{2}${signed(p[2])}${n}${signed(p[3])}`,
   }),
   make({ id: 'geo.offset', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 2, 0], sample: (g) => [r(g, 1, 3), r(g, 2, 3), r(g, -3, 3)],
     eval: (p, n) => p[0] * p[1] ** (n - 1) + p[2], normalize: (p) => ({ first: p[0], ratio: p[1], add: p[2] }),
-    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}${signed(p[2])}`, detect: () => 'Remove the constant, then the ratios are constant.', substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}${signed(p[2])}`,
+    latex: (p, x) => `${p[0]}\\cdot${p[1]}^{${x}-1}${signed(p[2])}`, detect: (p) => `\\frac{f(n+1)-${p[2]}}{f(n)-${p[2]}}=${p[1]}`, substitute: (p, n) => `${p[0]}\\cdot${p[1]}^{${n}-1}${signed(p[2])}`,
   }),
   make({ id: 'poly.nprod', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, -1, 3)],
     eval: (p, n) => n * (n + p[0]) + p[1], normalize: (p) => ({ shift: p[0], add: p[1] }),
-    latex: (p, x) => `${x}(${x}${signed(p[0])})${signed(p[1])}`, detect: () => 'The sequence factors into two nearby linear terms.', substitute: (p, n) => `${n}(${n}${signed(p[0])})${signed(p[1])}`,
+    latex: (p, x) => `${x}(${x}${signed(p[0])})${signed(p[1])}`, detect: (p) => `f(n)-${p[1]}=n(n${signed(p[0])})`, substitute: (p, n) => `${n}(${n}${signed(p[0])})${signed(p[1])}`,
   }),
   make({ id: 'seq.alt_sign', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 4), r(g, 1, 3)],
     eval: (p, n) => (n % 2 ? 1 : -1) * (p[0] * n + p[1]), normalize: (p) => ({ multiplier: p[0], add: p[1] }),
-    latex: (p, x) => `(-1)^{${x}+1}(${p[0]}${x}${signed(p[1])})`, detect: () => 'Alternating signs reveal a common absolute-value rule.', substitute: (p, n) => `(-1)^{${n}+1}(${p[0]}${n}${signed(p[1])})`,
+    latex: (p, x) => `(-1)^{${x}+1}(${p[0]}${x}${signed(p[1])})`, detect: () => `|f(n)|=${p[0] === 1 ? '' : p[0]}n${signed(p[1])}`, substitute: (p, n) => `(-1)^{${n}+1}(${p[0]}${n}${signed(p[1])})`,
   }),
   make({ id: 'rec.fib', since: 1, tier: 2, composable: false, arity: 2, maxIndex: 60 }, {
     fallback: [1, 1], sample: (g) => [r(g, 1, 3), r(g, 1, 3)],
     eval: (p, n) => { let a = p[0], b = p[1]; for (let i = 2; i < n; i++) [a, b] = [b, a + b]; return n === 1 ? a : b; },
-    normalize: (p) => ({ first: p[0], second: p[1] }), latex: (p, x) => `f(1)=${p[0]},\\ f(2)=${p[1]},\\ f(n)=f(n-1)+f(n-2)`, detect: () => 'Each term is the sum of the two preceding terms.', substitute: (p, n) => `f(${n})`,
+    normalize: (p) => ({ first: p[0], second: p[1] }), latex: (p, x) => `f(1)=${p[0]},\\ f(2)=${p[1]},\\ f(n)=f(n-1)+f(n-2)`, detect: () => `f(n)=f(n-1)+f(n-2)`, substitute: (p, n) => `f(${n})`,
   }),
   make({ id: 'exp.pow2', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 0], sample: (g) => [r(g, 1, 3), r(g, -2, 2)],
     eval: (p, n) => p[0] * 2 ** n + p[1], normalize: (p) => ({ multiplier: p[0], add: p[1] }),
-    latex: (p, x) => `${p[0]}\\cdot2^{${x}}${signed(p[1])}`, detect: () => 'Each difference doubles from one position to the next.', substitute: (p, n) => `${p[0]}\\cdot2^{${n}}${signed(p[1])}`,
+    latex: (p, x) => `${p[0]}\\cdot2^{${x}}${signed(p[1])}`, detect: () => `\\Delta f(n+1)=2\\Delta f(n)`, substitute: (p, n) => `${p[0]}\\cdot2^{${n}}${signed(p[1])}`,
   }),
   make({ id: 'poly.diff2', since: 1, tier: 2, composable: true, arity: 3, maxIndex: 60 }, {
     fallback: [1, 1, 0], sample: (g) => [r(g, -2, 2), r(g, -2, 2), r(g, -2, 2)],
     eval: (p, n) => p[0] * n * n + p[1] * n + p[2], normalize: (p) => ({ secondDifference: 2 * p[0], linear: p[1], add: p[2] }),
-    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: () => 'Constant second differences identify a quadratic rule.', substitute: (p, n) => `${p[0]}${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
+    latex: (p, x) => `${p[0]}${x}^{2}${signed(p[1])}${x}${signed(p[2])}`, detect: (p) => `\\Delta^{2}f(n)=${2 * p[0]}`, substitute: (p, n) => `${p[0]}${n}^{2}${signed(p[1])}${n}${signed(p[2])}`,
   }),
   make({ id: 'seq.step3', since: 1, tier: 2, composable: true, arity: 2, maxIndex: 60 }, {
     fallback: [1, 3], sample: (g) => [r(g, -3, 5), r(g, 1, 4)],
     eval: (p, n) => p[0] + p[1] * (n - 1), normalize: (p) => ({ first: p[0], step: p[1] }),
-    latex: (p, x) => `${p[0]}${signed(p[1])}(${x}-1)`, detect: () => 'Every term changes by the same common difference.', substitute: (p, n) => `${p[0]}${signed(p[1])}(${n}-1)`,
+    latex: (p, x) => `${p[0]}${signed(p[1])}(${x}-1)`, detect: (p) => `f(n+1)-f(n)=${p[1]}`, substitute: (p, n) => `${p[0]}${signed(p[1])}(${n}-1)`,
   }),
 ];
 
