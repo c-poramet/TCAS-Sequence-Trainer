@@ -10,6 +10,10 @@
         "/^node --input-type=module -e \"import \\{ ADVANCED_ENTRIES \\} from '\\./src/pool/advanced\\.js'; const baseline = 17; console\\.log\\(\\{ total: ADVANCED_ENTRIES\\.length, added: ADVANCED_ENTRIES\\.length - baseline \\}\\);\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node --input-type=module -e \"import \\{ ADVANCED_ENTRIES \\} from '\\./src/pool/advanced\\.js'; const e = ADVANCED_ENTRIES\\.find\\(x => x\\.id === 'seq\\.omega'\\); console\\.log\\(e\\.definition\\(\\[-3\\]\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

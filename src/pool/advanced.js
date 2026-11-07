@@ -1167,7 +1167,7 @@ function makeFormulaEntry({ id, arity = 1, sample, evaluate, latex, normalize, r
       id,
       detect: (p, pts) => pts.slice(0, DETECT_COUNT).map(({ n, value }) => `f(${n})=${value}`),
       chain: (p, n) => [latex(p, String(n)), String(evaluate(p, n))],
-      extraDefinition: () => [rule],
+      extraDefinition: () => [],
     },
   );
 }
