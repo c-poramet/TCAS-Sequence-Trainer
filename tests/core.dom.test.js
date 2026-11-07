@@ -9,6 +9,10 @@ test('normalizes identity and zero arithmetic terms', () => {
   assert.equal(normalizeMathExpression('0\\cdot n'), '0');
   assert.equal(normalizeMathExpression('n^{0}'), '1');
   assert.equal(normalizeMathExpression('n/1'), 'n');
+  assert.equal(normalizeMathExpression('0n^{3}+1n^{2}+0n+1'), 'n^{2}+1');
+  assert.equal(normalizeMathExpression('0\\cdot2^{n}+1\\cdot2^{n}+\\frac{n}{1}'), '2^{n}+n');
+  assert.equal(normalizeMathExpression('(n+0)^{2}'), 'n^{2}');
+  assert.equal(normalizeMathExpression('(-1)^{n+1}(0n+0)'), '(-1)^{n+1}0');
 });
 
 test('normalizes only delimited math in text', () => {

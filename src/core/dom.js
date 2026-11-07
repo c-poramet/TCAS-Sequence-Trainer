@@ -19,17 +19,34 @@ const MATH_TEXT = /(\$\$[\s\S]*?\$\$|\$[^$]*?\$)/g;
  * @returns {string}
  */
 export function normalizeMathExpression(expression) {
+  const atom = String.raw`(?:\\left\([^()]*\\right\)|\\frac\{[^{}]*\}\{[^{}]*\}|[A-Za-z]+(?:_\{[^{}]*\})?(?:\^\{[^{}]*\}|\^[A-Za-z0-9]+)?|[0-9]+(?:\^\{[^{}]*\}|\^[A-Za-z0-9]+)?)`;
+  const multipliedBy = (factor) => new RegExp(`${factor}\\\\(?:cdot|times)\\s*(${atom})`, 'g');
   let out = expression
-    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*\{0\}/g, '1')
-    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*0\b/g, '1')
+    .replace(/\\frac\{0\}\{[^{}]*\}/g, '0')
+    .replace(/\\frac\{([^{}]*)\}\{1\}/g, '$1')
+    .replace(multipliedBy('0'), '0')
+    .replace(new RegExp(`(${atom})\\\\(?:cdot|times)\\s*0`, 'g'), '0')
+    .replace(multipliedBy('1'), '$1')
+    .replace(new RegExp(`1\\\\(?:cdot|times)(${atom})`, 'g'), '$1')
     .replace(/\\(?:cdot|times)\s*1\b/g, '')
     .replace(/\b1\s*\\(?:cdot|times)\s*/g, '')
-    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\\(?:cdot|times)\s*0\b/g, '0')
-    .replace(/\b0\s*\\(?:cdot|times)\s*(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))/g, '0')
+    .replace(/(^|[+(\-])0[A-Za-z](?:\^\{[^{}]*\}|\^?[A-Za-z0-9]+)?(?=$|[+\-)])/g, '$1')
+    .replace(/(^|[+(\-])-?1(?=[A-Za-z](?:\^\{[^{}]*\}|\^?[A-Za-z0-9]+)?(?:$|[+\-)]))/g, '$1')
+    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*\{0\}/g, '1')
+    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*0\b/g, '1')
     .replace(/(?:\\div|\/)\s*1\b/g, '')
+    .replace(/(^|[=(])0\s*\+/g, '$1')
+    .replace(/(^|[=(])0\s*-/g, '$1-')
     .replace(/[ \t]*[+]\\?0\b/g, '')
     .replace(/[ \t]*-\\?0\b/g, '');
-  return out.replace(/\s{2,}/g, ' ').trim();
+  return out
+    .replace(/\(\s*\)/g, '(0)')
+    .replace(/\(([\w]+)\)/g, '$1')
+    .replace(/\\left\(([\w]+)\\right\)/g, '$1')
+    .replace(/\+\+/g, '+')
+    .replace(/^\+/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 /**
