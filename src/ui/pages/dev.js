@@ -14,6 +14,16 @@ function sampleFor(entry, seed = `dev:${entry.id}`) {
   return entry.sampleParams(createRng(seed), { cap: 2500, role: 'solo' });
 }
 
+function templateFor(entry) {
+  try {
+    if (entry.latex(sampleFor(entry)) === 'a_{n}') return null;
+    const symbols = Array.from({ length: entry.arity }, (_, index) => String.fromCharCode(97 + index));
+    return entry.latex(symbols);
+  } catch {
+    return 'f(n)';
+  }
+}
+
 function buildCard(entry) {
   const validation = validateEntry(entry, { samples: 12, seed: 'dev' });
   const result = h(
@@ -35,13 +45,9 @@ function buildCard(entry) {
   const definition = h('div', { class: 'dev__definition' });
   const reroll = () => {
     const params = sampleFor(entry, randomSeed());
-    const latex = entry.latex(params);
-    formula.hidden = latex === 'a_{n}';
-    formula.textContent = formula.hidden ? '' : `$$${latex}$$`;
     definition.replaceChildren(
       ...entry.definition(params).map((line) => h('div', { class: 'dev__definition-line' }, `$$${line}$$`)),
     );
-    renderMath(formula);
     renderMath(definition);
   };
   sampleLabel.querySelector('.dev__reroll').addEventListener('click', reroll);
@@ -75,6 +81,12 @@ function buildCard(entry) {
       result,
     ),
   );
+  const template = templateFor(entry);
+  formula.hidden = template === null;
+  if (template !== null) {
+    formula.textContent = `$$${template}$$`;
+    renderMath(formula);
+  }
   reroll();
   return details;
 }
