@@ -106,6 +106,7 @@ test('composition: outer.solve gets points (g(n), value)', () => {
   assert.deepEqual(calls[0].points, [{ n: 3, value: 9 }, { n: 5, value: 25 }, { n: 9, value: 81 }, { n: 11, value: 121 }, { n: 13, value: 169 }]);
   assert.equal(calls[0].hidden, 7);
   const ruleSteps = sol.sections[1].steps;
+  assert.ok(ruleSteps.find((s) => s.key === 'gen.step.innerDefinition').math[0].startsWith('g(n)='));
   assert.ok(ruleSteps.find((s) => s.key === 'gen.step.combined').math[0].startsWith('a_n=1'));
   const fin = sol.sections.at(-1).steps.map((s) => s.key);
   assert.deepEqual(fin, ['gen.step.ruleAll', 'gen.step.substituteInner', 'gen.step.substituteOuter', 'gen.step.conclusion']);

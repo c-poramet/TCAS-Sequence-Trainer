@@ -147,6 +147,21 @@ function composeLatex(entry, params, innerLatex) {
 }
 
 /**
+ * Relabel a pool entry's generic sequence definition as the inner function g.
+ * @param {string[]} lines
+ * @returns {string[]}
+ */
+function innerDefinition(lines) {
+  return lines.map((line) =>
+    line
+      .replace(/^f\(n\)=/, 'g(n)=')
+      .replace(/^a_n=/, 'g(n)=')
+      .replace(/^a_\{n\}/, 'g(n)')
+      .replace(/a_\{/g, 'g_{')
+      .replace(/a_n/g, 'g(n)'));
+}
+
+/**
  * @param {{n:number,value:number}[]} points
  * @returns {string} LaTeX line "a_{1}=3,\; a_{3}=9"
  */
@@ -556,7 +571,7 @@ export function createEngine({ pool }) {
         const inner = entryOf(rule.i.f);
         const outer = entryOf(rule.o.f);
         const g = (n) => inner.evaluate(rule.i.p, n);
-        steps.push({ key: 'gen.step.innerDefinition', math: inner.definition(rule.i.p) });
+        steps.push({ key: 'gen.step.innerDefinition', math: innerDefinition(inner.definition(rule.i.p)) });
         steps.push({
           key: 'gen.step.innerTable',
           math: [
