@@ -9,7 +9,7 @@ import { t } from '../core/i18n.js';
 import { getSetting } from '../core/settings.js';
 import { getChoices } from '../gen/choices.js';
 import { buildSolution } from '../gen/solution.js';
-import { renderQr } from '../core/qr.js';
+import { questionSolutionUrl, renderQr } from '../core/qr.js';
 
 /**
  * The six terms with the missing one blanked.
@@ -40,6 +40,7 @@ export function renderPrintView(container, { setId, questions, options }) {
     h('header', { class: 'print__head' },
       h('div', { class: 'print__head-main' },
       h('h1', { class: 'print__title' }, t('print.title')),
+      h('p', { class: 'print__instruction' }, t('print.scanInstruction')),
       h('p', { class: 'print__setid' },
         h('span', { class: 'print__setid-label' }, t('print.setId')),
         ' ',
@@ -74,7 +75,7 @@ export function renderPrintView(container, { setId, questions, options }) {
         'li',
         { class: 'print__q', 'data-qid': q.id },
         content,
-        h('div', { class: 'print__qr print__question-qr' }, renderQr(q.id, t('print.questionQrLabel'))),
+        h('div', { class: 'print__qr print__question-qr' }, renderQr(questionSolutionUrl(q.id), t('print.questionQrLabel'))),
       ),
     );
   });

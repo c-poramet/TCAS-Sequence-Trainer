@@ -8,7 +8,7 @@ import { generateSet, generateSetFromId, GenerationError } from '../../gen/gener
 import { getChoices } from '../../gen/choices.js';
 import { POOL_VERSION } from '../../pool/index.js';
 import { setHandoff } from '../handoff.js';
-import { renderQr } from '../../core/qr.js';
+import { questionSolutionUrl, renderQr } from '../../core/qr.js';
 
 /** Number of question rows appended per "show more" click. */
 const PAGE_SIZE = 50;
@@ -145,7 +145,7 @@ function questionRow(q, number) {
         choices.map((value) => h('li', { class: 'gen__choice' }, String(value))),
       ),
     ),
-    h('span', { class: 'gen__qr' }, renderQr(q.id, t('print.questionQrLabel'))),
+    h('span', { class: 'gen__qr' }, renderQr(questionSolutionUrl(q.id), t('print.questionQrLabel'))),
   );
 }
 

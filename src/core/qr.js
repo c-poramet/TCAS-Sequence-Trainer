@@ -4,6 +4,18 @@
  */
 
 /**
+ * Build the app URL that opens a question's solution.
+ * @param {string} questionId
+ * @returns {string}
+ */
+export function questionSolutionUrl(questionId) {
+  const url = new URL(globalThis.location.href);
+  url.search = '';
+  url.hash = '/q/' + encodeURIComponent(questionId);
+  return url.href;
+}
+
+/**
  * Build a QR code as an accessible SVG element.
  * @param {string} value
  * @param {string} label
