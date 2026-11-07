@@ -478,7 +478,9 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .dev__reroll { height: 32px; padding: 0 12px; font-size: var(--text-sm); }
 .dev__formula { min-height: 48px; overflow-x: auto; padding: 12px 0; }
 .dev__formula .katex-display { margin: 0; text-align: left; }
-.dev__definition { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
+.dev__definition { grid-column: 1 / -1; overflow-x: auto; color: var(--ink-soft); }
+.dev__definition-line { min-height: 28px; padding: 4px 0; }
+.dev__definition-line .katex-display { margin: 0; text-align: left; }
 .dev__validation { grid-column: 1 / -1; margin: 0; font-weight: 600; }
 .dev__validation--ok { color: var(--green-ink); }
 .dev__validation--error { color: var(--red-ink); white-space: pre-wrap; }

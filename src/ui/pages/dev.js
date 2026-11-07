@@ -32,12 +32,17 @@ function buildCard(entry) {
     h('button', { type: 'button', class: 'dev__reroll' }, label('ui.dev.reroll')),
   );
   const formula = h('div', { class: 'dev__formula' });
-  const definition = h('p', { class: 'dev__definition' });
+  const definition = h('div', { class: 'dev__definition' });
   const reroll = () => {
     const params = sampleFor(entry, randomSeed());
-    formula.textContent = `$$${entry.latex(params)}$$`;
-    definition.textContent = entry.definition(params).join(' · ');
+    const latex = entry.latex(params);
+    formula.hidden = latex === 'a_{n}';
+    formula.textContent = formula.hidden ? '' : `$$${latex}$$`;
+    definition.replaceChildren(
+      ...entry.definition(params).map((line) => h('div', { class: 'dev__definition-line' }, `$$${line}$$`)),
+    );
     renderMath(formula);
+    renderMath(definition);
   };
   sampleLabel.querySelector('.dev__reroll').addEventListener('click', reroll);
   const details = h(
