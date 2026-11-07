@@ -243,7 +243,7 @@ export function mount(container, ctx) {
     for (const key of FIXED_KEYS) {
       fixedList.append(
         h('dt', { class: 'gen__fixed-name' }, t('settings.gen.' + key + '.label')),
-        h('dd', { class: 'gen__fixed-value', 'data-key': key }, formatValue(settings[key])),
+        h('dd', { class: 'gen__fixed-value', 'data-key': key }, formatValue(settings[key] ?? getSetting('gen.' + key))),
       );
     }
   }

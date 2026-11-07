@@ -10,7 +10,7 @@ export const ALGO_VERSION = 1;
 
 /** Order of the values inside a Set ID payload. */
 export const GEN_KEYS = Object.freeze([
-  'seed', 'count', 'hardRatio', 'mixedChance', 'termCount', 'cap', 'maxAttempts', 'poolVersion',
+  'seed', 'count', 'hardRatio', 'mixedChance', 'cap', 'maxAttempts', 'poolVersion',
   'normalTiers', 'composeTiers', 'rareTiers', 'composeChance', 'minDistinct', 'allowNegative',
 ]);
 
@@ -187,11 +187,11 @@ export function decodeQuestionId(id) {
   const mode = s[i];
   if (mode !== 'N' && mode !== 'H') fail('mode must be N or H');
   i++;
-  const missingChar = s[i];
-  if (!isDigit(missingChar)) fail('missing must be a digit');
-  const missing = Number(missingChar);
-  if (missing < MISSING_MIN || missing > MISSING_MAX) fail('missing must be 1..12');
-  i++;
+  const missingStart = i;
+  while (isDigit(s[i])) i++;
+  if (i === missingStart) fail('missing must be a digit');
+  const missing = Number(s.slice(missingStart, i));
+  if (!Number.isInteger(missing) || missing < MISSING_MIN || missing > 12) fail('missing must be 1..12');
   expect(':');
   const rules = [parseExpr()];
   if (s[i] === '|') {
@@ -210,6 +210,7 @@ export function decodeQuestionId(id) {
     termCount = Number(s.slice(start, i));
     if (!Number.isInteger(termCount) || termCount < 6 || termCount > 12) fail('term count must be 6..12');
   }
+  if (missing > termCount) fail(`missing must be 1..${termCount}`);
   if (i !== s.length) fail('unexpected trailing characters');
   return { v, mode, missing, ...(termCount === 6 ? {} : { termCount }), rules };
 }
@@ -318,6 +319,7 @@ function normalizeGenSettings(s) {
     ['termCount', inSchemaRange('gen.termCount', s.termCount ?? 6, 'int')],
     ['hardRatio', inSchemaRange('gen.hardRatio', s.hardRatio, 'float')],
     ['mixedChance', inSchemaRange('gen.mixedChance', s.mixedChance, 'float')],
+    ['termCount', inSchemaRange('gen.termCount', s.termCount ?? 6, 'int')],
     ['cap', inSchemaRange('gen.cap', s.cap, 'int')],
     ['maxAttempts', inSchemaRange('gen.maxAttempts', s.maxAttempts, 'int')],
     ['poolVersion', inSchemaRange('gen.poolVersion', s.poolVersion, 'int')],
@@ -346,7 +348,9 @@ function normalizeGenSettings(s) {
 export function encodeSetId(genSettings, algo = ALGO_VERSION) {
   if (!Number.isSafeInteger(algo) || algo < 1) throw new IdError('Algorithm version must be an integer >= 1');
   const norm = normalizeGenSettings(genSettings);
-  const json = JSON.stringify(GEN_KEYS.map((key) => norm[key]));
+  const values = GEN_KEYS.map((key) => norm[key]);
+  if (norm.termCount !== 6) values.push(norm.termCount);
+  const json = JSON.stringify(values);
   return `S${algo}-${bytesToBase64Url(new TextEncoder().encode(json))}`;
 }
 
@@ -382,17 +386,17 @@ export function decodeSetId(sid) {
   } catch {
     return fail('payload is not valid UTF-8 JSON');
   }
-  if (!Array.isArray(values) || (values.length !== GEN_KEYS.length && values.length !== GEN_KEYS.length - 1)) fail('payload has the wrong shape');
-  const legacy = values.length === GEN_KEYS.length - 1;
-  if (legacy) values.splice(4, 0, 6);
+  if (!Array.isArray(values) || (values.length !== GEN_KEYS.length && values.length !== GEN_KEYS.length + 1)) fail('payload has the wrong shape');
+  const hasTermCount = values.length === GEN_KEYS.length + 1;
   /** @type {Record<string, any>} */
   const raw = {};
   GEN_KEYS.forEach((key, index) => {
     raw[key] = values[index];
   });
+  raw.termCount = hasTermCount ? values[GEN_KEYS.length] : 6;
   const settings = normalizeGenSettings(raw);
   if (settings.termCount === 6) delete settings.termCount;
-  if (!legacy && encodeSetId(settings, algo) !== sid) fail('non-canonical encoding');
+  if (encodeSetId(settings, algo) !== sid) fail('non-canonical encoding');
   return { algo, settings };
 }
 

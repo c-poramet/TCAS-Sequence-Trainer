@@ -188,7 +188,6 @@ export function getGenConfig({ poolVersion }) {
   return {
     hardRatio: getSetting('gen.hardRatio'),
     mixedChance: getSetting('gen.mixedChance'),
-    termCount: getSetting('gen.termCount'),
     cap: getSetting('gen.cap'),
     maxAttempts: getSetting('gen.maxAttempts'),
     poolVersion: pinned === null ? poolVersion : Math.min(pinned, poolVersion),
@@ -228,5 +227,7 @@ export function toGenSettings(genCfg, { seed, count }) {
     const v = key === 'seed' ? seed : key === 'count' ? count : genCfg[key];
     out[key] = Array.isArray(v) ? v.slice() : v;
   }
+  const termCount = getSetting('gen.termCount') ?? 6;
+  if (termCount !== 6) out.termCount = termCount;
   return out;
 }
