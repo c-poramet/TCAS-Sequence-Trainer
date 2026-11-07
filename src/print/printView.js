@@ -110,7 +110,6 @@ export function renderPrintView(container, { setId, questions, options }) {
       h('ol', { class: 'print__solution-list' },
         questions.map((q, i) =>
           h('li', { class: 'print__solution', 'data-qid': q.id },
-            h('div', { class: 'print__solution-number' }, String(i + 1)),
             renderSolution(buildSolution(q))))));
     fragment.appendChild(solutions);
   }

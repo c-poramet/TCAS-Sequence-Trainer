@@ -412,14 +412,16 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .print__choice-label { display: block; color: var(--ink); font-weight: 600; }
 .print__choice-value { display: block; }
 .print__set-qr svg { width: 96px; height: 96px; }
-.print__head-main { min-width: 0; }
+.print__head-main { flex: 1 1 auto; min-width: 0; }
+.print__setid { overflow-wrap: anywhere; }
+.print__setid-value { overflow-wrap: anywhere; word-break: break-word; }
 .print__answers, .print__solutions { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
 .print__answer-table { width: 100%; border-collapse: collapse; background: var(--bg-raised); }
 .print__answer th, .print__answer td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
 .print__answer th { width: 52px; color: var(--ink-soft); font-weight: 600; }
 .print__solution-list { padding-left: 28px; }
 .print__solution { padding: 8px 0; break-inside: avoid; }
-.print__solution-number { margin-bottom: 8px; color: var(--ink-soft); font-weight: 600; }
+.print__solution-number { display: none; }
 .print__solution .solution { display: flex; flex-direction: column; }
 .print__solution .solution__answer { order: -1; margin-bottom: 16px; }
 
@@ -467,8 +469,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   .print__choices { gap: 2mm; margin-top: 3mm; }
   .print__choice { min-width: 16mm; padding: 2mm 3mm; border-color: #D7CBB9; background: #EEE7DD; }
   .print__qr { padding: 2mm; }
-  .print__qr svg { width: 18mm; height: 18mm; }
-  .print__set-qr svg { width: 25mm; height: 25mm; }
+  .print__qr svg { width: 25mm; height: 25mm; }
+  .print__set-qr svg { width: 32mm; height: 32mm; }
   .print__list { margin-top: 8mm; }
   .print__answers, .print__solutions { margin-top: 12mm; }
   .print__answer th, .print__answer td { padding: 2mm 3mm; border-color: #D7CBB9; }
