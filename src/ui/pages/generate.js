@@ -295,9 +295,11 @@ export function mount(container, ctx) {
     }
     if (disposed) return;
     status.textContent = t(ok ? 'ui.common.copied' : 'ui.common.copyFailed');
+    status.hidden = false;
     clearTimeout(copyTimer);
     copyTimer = setTimeout(() => {
       status.textContent = '';
+      status.hidden = true;
     }, COPY_NOTICE_MS);
   }
 
@@ -318,7 +320,7 @@ export function mount(container, ctx) {
       readonly: true,
       value: sid,
     });
-    const copyStatus = h('span', { class: 'gen__copy-status', role: 'status' });
+    const copyStatus = h('span', { class: 'gen__copy-status', role: 'status', hidden: true });
     const copyBtn = h(
       'button',
       { type: 'button', class: 'gen__copy', onclick: () => copyText(sid, sidInput, copyStatus) },

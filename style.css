@@ -318,12 +318,27 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .gen__setid-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
-  align-items: end;
+  align-items: center;
   gap: 8px;
 }
 .gen__setid-row .gen__label { grid-column: 1 / -1; margin-bottom: 0; }
 .gen__setid-row .gen__input { min-width: 0; }
-.gen__copy-status { align-self: center; color: var(--green-ink); font-size: var(--text-sm); }
+.gen__setid-row .gen__copy, .gen__setid-row .gen__permalink { height: 48px; }
+.gen__copy-status {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--green);
+  border-radius: var(--radius-md);
+  background: var(--green-soft);
+  box-shadow: var(--shadow-2);
+  color: var(--green-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
 .gen__set-qr { width: fit-content; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--bg-sunken); line-height: 0; }
 .gen__set-qr svg { display: block; width: 180px; height: 180px; }
 .gen__permalink { margin: 0; }
