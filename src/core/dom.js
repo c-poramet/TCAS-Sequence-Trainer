@@ -11,6 +11,38 @@ const MATH_DELIMITERS = [
   { left: '$', right: '$', display: false },
 ];
 const FALLBACK_LABEL_OFFSET = 1;
+const MATH_TEXT = /(\$\$[\s\S]*?\$\$|\$[^$]*?\$)/g;
+
+/**
+ * Remove identity and zero terms from a small LaTeX expression.
+ * @param {string} expression
+ * @returns {string}
+ */
+export function normalizeMathExpression(expression) {
+  let out = expression
+    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*\{0\}/g, '1')
+    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\^\s*0\b/g, '1')
+    .replace(/\\(?:cdot|times)\s*1\b/g, '')
+    .replace(/\b1\s*\\(?:cdot|times)\s*/g, '')
+    .replace(/(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))\s*\\(?:cdot|times)\s*0\b/g, '0')
+    .replace(/\b0\s*\\(?:cdot|times)\s*(?:[A-Za-z][A-Za-z0-9_]*|[0-9]+|\\left\([^()]*\\right\))/g, '0')
+    .replace(/(?:\\div|\/)\s*1\b/g, '')
+    .replace(/[ \t]*[+]\\?0\b/g, '')
+    .replace(/[ \t]*-\\?0\b/g, '');
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
+/**
+ * Normalize only math-delimited portions of text.
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizeMathText(text) {
+  return text.replace(MATH_TEXT, (math) => {
+    const delimiter = math.startsWith('$$') ? '$$' : '$';
+    return `${delimiter}${normalizeMathExpression(math.slice(delimiter.length, -delimiter.length))}${delimiter}`;
+  });
+}
 
 /**
  * @param {any} x
@@ -96,8 +128,12 @@ export function clear(el) {
  */
 export function renderMath(el) {
   const render = globalThis.renderMathInElement;
-  if (typeof render !== 'function') return;
   try {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    for (const node of textNodes) node.nodeValue = normalizeMathText(node.nodeValue ?? '');
+    if (typeof render !== 'function') return;
     render(el, { delimiters: MATH_DELIMITERS, throwOnError: false });
   } catch (err) {
     console.warn('Math rendering failed', err);
