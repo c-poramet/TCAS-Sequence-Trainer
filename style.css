@@ -473,7 +473,9 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .dev__meta { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; padding: 14px; border-radius: var(--radius-md); background: var(--bg-sunken); }
 .dev__meta dt { color: var(--ink-soft); }
 .dev__meta dd { margin: 0; font-weight: 600; }
-.dev__sample-label { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.dev__sample-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dev__sample-label { margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.dev__reroll { height: 32px; padding: 0 12px; font-size: var(--text-sm); }
 .dev__formula { min-height: 48px; overflow-x: auto; padding: 12px 0; }
 .dev__formula .katex-display { margin: 0; text-align: left; }
 .dev__definition { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }

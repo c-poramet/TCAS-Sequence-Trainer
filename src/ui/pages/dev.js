@@ -2,7 +2,7 @@ import { h, renderMath } from '../../core/dom.js';
 import { t } from '../../core/i18n.js';
 import { listEntries, POOL_VERSION } from '../../pool/index.js';
 import { validateEntry } from '../../pool/validate.js';
-import { createRng } from '../../core/rng.js';
+import { createRng, randomSeed } from '../../core/rng.js';
 
 const TIER_OPTIONS = [1, 2, 3, 4];
 
@@ -10,12 +10,11 @@ function label(key, params) {
   return t(key, params);
 }
 
-function sampleFor(entry) {
-  return entry.sampleParams(createRng(`dev:${entry.id}`), { cap: 2500, role: 'solo' });
+function sampleFor(entry, seed = `dev:${entry.id}`) {
+  return entry.sampleParams(createRng(seed), { cap: 2500, role: 'solo' });
 }
 
 function buildCard(entry) {
-  const params = sampleFor(entry);
   const validation = validateEntry(entry, { samples: 12, seed: 'dev' });
   const result = h(
     'p',
@@ -26,7 +25,21 @@ function buildCard(entry) {
   );
   if (!validation.ok) result.title = validation.errors.join('\n');
 
-  const formula = h('div', { class: 'dev__formula' }, `$$${entry.latex(params)}$$`);
+  const sampleLabel = h(
+    'div',
+    { class: 'dev__sample-head' },
+    h('p', { class: 'dev__sample-label' }, label('ui.dev.sample')),
+    h('button', { type: 'button', class: 'dev__reroll' }, label('ui.dev.reroll')),
+  );
+  const formula = h('div', { class: 'dev__formula' });
+  const definition = h('p', { class: 'dev__definition' });
+  const reroll = () => {
+    const params = sampleFor(entry, randomSeed());
+    formula.textContent = `$$${entry.latex(params)}$$`;
+    definition.textContent = entry.definition(params).join(' · ');
+    renderMath(formula);
+  };
+  sampleLabel.querySelector('.dev__reroll').addEventListener('click', reroll);
   const details = h(
     'details',
     { class: 'dev__entry' },
@@ -51,13 +64,13 @@ function buildCard(entry) {
         h('dt', {}, label('ui.dev.composable')),
         h('dd', {}, entry.composable ? label('ui.common.yes') : label('ui.common.no')),
       ),
-      h('p', { class: 'dev__sample-label' }, label('ui.dev.sample')),
+      sampleLabel,
       formula,
-      h('p', { class: 'dev__definition' }, entry.definition(params).join(' · ')),
+      definition,
       result,
     ),
   );
-  renderMath(formula);
+  reroll();
   return details;
 }
 
