@@ -266,8 +266,12 @@ export function mount(container, ctx) {
         },
       },
       h('label', { class: 'run__label', for: INPUT_ID }, t('ui.run.answerLabel')),
-      input,
-      h('button', { type: 'submit', class: 'run__submit' }, t('ui.run.submit')),
+      h(
+        'div',
+        { class: 'run__answer-row' },
+        input,
+        h('button', { type: 'submit', class: 'run__submit' }, t('ui.run.submit')),
+      ),
       error,
     );
   }
@@ -316,17 +320,34 @@ export function mount(container, ctx) {
     const q = session.question;
     timerEl = h('output', { class: 'run__timer', role: 'timer' }, formatClock(session.run.elapsed()));
     timerEl.hidden = !session.timerVisible;
-    const timerCb = h('input', { type: 'checkbox', class: 'run__timer-checkbox' });
-    timerCb.checked = session.timerVisible;
-    timerCb.addEventListener('change', () => {
-      session.timerVisible = timerCb.checked;
-      timerEl.hidden = !timerCb.checked;
+    const timebox = h(
+      'div',
+      {
+        class: 'run__timebox',
+        role: 'button',
+        tabindex: '0',
+        'aria-label': t('ui.run.showTimer'),
+        'aria-pressed': String(session.timerVisible),
+      },
+      timerEl,
+    );
+    const toggleTimer = () => {
+      session.timerVisible = !session.timerVisible;
+      timerEl.hidden = !session.timerVisible;
+      timebox.setAttribute('aria-pressed', String(session.timerVisible));
+    };
+    timebox.addEventListener('click', toggleTimer);
+    timebox.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleTimer();
+      }
     });
     const bar = h(
       'header',
       { class: 'run__bar' },
       h('p', { class: 'run__progress' }, progressText()),
-      h('div', { class: 'run__timebox' }, timerEl, h('label', { class: 'run__timer-toggle' }, timerCb, h('span', {}, t('ui.run.showTimer')))),
+      timebox,
       h(
         'div',
         { class: 'run__actions' },

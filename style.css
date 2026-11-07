@@ -50,6 +50,7 @@ button, a, input, select { transition: transform var(--dur-fast) var(--ease-out)
 a { color: var(--ink); text-decoration-color: var(--yellow); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 a:hover { color: var(--yellow-ink); }
 button { cursor: pointer; }
+button + button { margin-left: 8px; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
   outline: 2px solid var(--yellow);
   outline-offset: 2px;
@@ -246,7 +247,15 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .train__bucket-name { flex: 1; }
 .train__bucket-count { color: var(--ink-soft); font-size: var(--text-sm); }
 .train__note { grid-column: 1 / -1; margin: -4px 0 0; color: var(--ink-soft); font-size: var(--text-sm); }
-.train__field { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg-raised); }
+.train__field {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 360px);
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+}
 .gen__input { min-height: 48px; padding: 10px 14px; }
 .gen__fixed { grid-column: 1 / -1; }
 .gen__submit { grid-column: 1 / -1; justify-self: center; min-width: 160px; height: 40px; }
@@ -338,8 +347,27 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .run__stage { text-align: center; }
 .run__sequence { margin: 28px 0; }
 .run__form { max-width: 420px; margin: 0 auto; }
+.run__answer-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: stretch; }
+.run__answer-row .run__input { min-width: 0; }
+.run__answer-row .run__submit { height: auto; }
 .run__actions, .run__stats, .run__links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-.run__timebox, .run__stat { padding: 10px 16px; border-radius: var(--radius-md); background: var(--bg-sunken); }
+.run__timebox {
+  display: inline-flex;
+  min-width: 150px;
+  min-height: 72px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  cursor: pointer;
+  user-select: none;
+}
+.run__timebox:hover { border-color: var(--yellow); background: var(--bg-hover); }
+.run__timebox[aria-pressed="false"] .run__timer::after { content: '—'; }
+.run__timer { font-variant-numeric: tabular-nums; font-size: clamp(32px, 7vw, 52px); font-weight: 600; letter-spacing: .04em; line-height: 1; }
+.run__stat { padding: 10px 16px; border-radius: var(--radius-md); background: var(--bg-sunken); }
 .run__verdict--correct { color: var(--green-ink); }
 .run__verdict--wrong, .run__verdict--skipped { color: var(--red-ink); }
 
@@ -434,6 +462,8 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
   #app { padding: 36px 16px 56px; }
   .home__input-row { grid-template-columns: 1fr; }
   .home__input-row .home__open-button { height: 40px; }
+  .run__answer-row { grid-template-columns: 1fr; }
+  .run__answer-row .run__submit { height: 40px; }
   .gen__form, .train__form, .settings__field { grid-template-columns: 1fr; }
   .gen__overview { grid-template-columns: 1fr; }
   .gen__set-qr { justify-self: start; }
