@@ -56,8 +56,8 @@ button, input, select { font: inherit; }
 button, a, input, select { transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
 a { color: var(--ink); text-decoration-color: var(--yellow); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 a:hover { color: var(--yellow-ink); }
-button { cursor: pointer; margin-bottom: 8px; }
-button + button { margin-left: 8px; }
+button { cursor: pointer; margin: 0; }
+button + button { margin-left: 0; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
   outline: 2px solid var(--yellow);
   outline-offset: 2px;
