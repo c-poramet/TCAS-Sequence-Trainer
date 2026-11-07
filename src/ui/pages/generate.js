@@ -8,6 +8,7 @@ import { generateSet, generateSetFromId, GenerationError } from '../../gen/gener
 import { getChoices } from '../../gen/choices.js';
 import { POOL_VERSION } from '../../pool/index.js';
 import { setHandoff } from '../handoff.js';
+import { renderQr } from '../../core/qr.js';
 
 /** Number of question rows appended per "show more" click. */
 const PAGE_SIZE = 50;
@@ -118,7 +119,12 @@ function questionRow(q, number) {
   return h(
     'li',
     { class: 'gen__row', 'data-qid': q.id, 'data-mode': q.mode },
-    h('a', { class: 'gen__qid', href: '#/q/' + encodeURIComponent(q.id) }, t('ui.generate.questionNumber', { number })),
+    h(
+      'div',
+      { class: 'gen__row-head' },
+      h('a', { class: 'gen__qid', href: '#/q/' + encodeURIComponent(q.id) }, t('ui.generate.questionNumber', { number })),
+      h('span', { class: 'gen__qr' }, renderQr(q.id, t('print.questionQrLabel'))),
+    ),
     renderSequence(
       q.terms.map((v, i) => (i + 1 === q.missing ? null : v)),
       { missing: q.missing },
@@ -363,6 +369,7 @@ export function mount(container, ctx) {
         copyBtn,
         copyStatus,
       ),
+      h('div', { class: 'gen__set-qr' }, renderQr(sid, t('print.setQrLabel'))),
       h('p', { class: 'gen__permalink' }, h('a', { href: '#/set/' + encodeURIComponent(sid) }, t('ui.generate.permalink'))),
       h(
         'fieldset',

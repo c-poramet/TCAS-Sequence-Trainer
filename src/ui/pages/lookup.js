@@ -3,6 +3,7 @@ import { t } from '../../core/i18n.js';
 import { isQuestionId, isSetId, IdError } from '../../core/ids.js';
 import { rebuildQuestion, RebuildError } from '../../gen/generator.js';
 import { buildSolution } from '../../gen/solution.js';
+import { decodeQrFile } from '../../core/qr.js';
 
 /**
  * Map a pasted ID to a route hash.
@@ -61,6 +62,26 @@ export function mount(container, ctx) {
   input.addEventListener('input', () => {
     error.hidden = true;
   });
+  const qrInput = h('input', { id: 'lookup-qr-file', class: 'lookup__qr-input', type: 'file', accept: 'image/*', capture: 'environment' });
+  const qrButton = h('button', { type: 'button', class: 'lookup__qr-button' }, t('ui.lookup.scan'));
+  const scanStatus = h('span', { class: 'lookup__scan-status', role: 'status' });
+  qrButton.addEventListener('click', () => qrInput.click());
+  qrInput.addEventListener('change', async () => {
+    const file = qrInput.files?.[0];
+    if (!file) return;
+    scanStatus.textContent = t('ui.lookup.scanning');
+    try {
+      input.value = await decodeQrFile(file);
+      scanStatus.textContent = t('ui.lookup.scanDone');
+      error.hidden = true;
+      input.focus();
+    } catch (err) {
+      console.error(err);
+      scanStatus.textContent = t('ui.lookup.scanError');
+    } finally {
+      qrInput.value = '';
+    }
+  });
 
   const result = h('div', { class: 'lookup__result' });
 
@@ -84,6 +105,9 @@ export function mount(container, ctx) {
     h('label', { class: 'lookup__label', for: 'lookup-input' }, t('ui.lookup.label')),
     input,
     h('button', { type: 'submit', class: 'lookup__button' }, t('ui.lookup.button')),
+    qrButton,
+    qrInput,
+    scanStatus,
     error,
   );
 

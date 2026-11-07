@@ -9,6 +9,7 @@ import { t } from '../core/i18n.js';
 import { getSetting } from '../core/settings.js';
 import { getChoices } from '../gen/choices.js';
 import { buildSolution } from '../gen/solution.js';
+import { renderQr } from '../core/qr.js';
 
 /**
  * The six terms with the missing one blanked.
@@ -35,20 +36,26 @@ export function renderPrintView(container, { setId, questions, options }) {
   const choiceCount = Number.isInteger(options.mcChoices) ? options.mcChoices : getSetting('mcChoices');
   const choiceSets = isMc ? questions.map((q) => getChoices(q, choiceCount)) : [];
 
+  const setQr = renderQr(setId, t('print.setQrLabel'));
   fragment.appendChild(
     h('header', { class: 'print__head' },
+      h('div', { class: 'print__head-main' },
       h('h1', { class: 'print__title' }, t('print.title')),
       h('p', { class: 'print__setid' },
         h('span', { class: 'print__setid-label' }, t('print.setId')),
         ' ',
         h('code', { class: 'print__setid-value' }, setId)),
       h('p', { class: 'print__count' }, t('print.count', { count: questions.length }))),
+      h('div', { class: 'print__qr print__set-qr' }, setQr),
+    ),
   );
 
   const list = h('ol', { class: 'print__list' });
   questions.forEach((q, i) => {
     const parts = [
-      h('p', { class: 'print__qid' }, h('code', {}, q.id)),
+      h('div', { class: 'print__q-head' },
+        h('div', {}, h('span', { class: 'print__q-number' }, `${i + 1}`), h('code', { class: 'print__qid' }, q.id)),
+        h('div', { class: 'print__qr print__question-qr' }, renderQr(q.id, t('print.questionQrLabel')))),
       renderSequence(maskedTerms(q), { missing: q.missing }),
     ];
     if (isMc) {

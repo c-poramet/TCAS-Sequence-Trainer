@@ -9,6 +9,8 @@ registerStrings('en', {
   // print
   'print.title': 'TGAT2 Number Sequence Practice',
   'print.setId': 'Set ID:',
+  'print.setQrLabel': 'QR code for this set ID',
+  'print.questionQrLabel': 'QR code for this question ID',
   'print.count': '{count} questions',
   'print.answers': 'Answer key',
   'print.solutions': 'Worked solutions',
@@ -86,6 +88,8 @@ registerStrings('th', {
   // print
   'print.title': 'แบบฝึกหัดอนุกรมตัวเลข TGAT2',
   'print.setId': 'รหัสชุดข้อสอบ:',
+  'print.setQrLabel': 'คิวอาร์โค้ดสำหรับรหัสชุดโจทย์นี้',
+  'print.questionQrLabel': 'คิวอาร์โค้ดสำหรับรหัสโจทย์ข้อนี้',
   'print.count': '{count} ข้อ',
   'print.answers': 'เฉลย',
   'print.solutions': 'เฉลยละเอียด',
