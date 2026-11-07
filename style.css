@@ -476,7 +476,7 @@ button:disabled { cursor: not-allowed; color: var(--ink-faint); background: var(
 .dev__sample-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .dev__sample-label { margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }
 .dev__reroll { height: 32px; padding: 0 12px; font-size: var(--text-sm); }
-.dev__formula { min-height: 48px; overflow-x: auto; padding: 12px 0; }
+.dev__formula { grid-column: 1 / -1; min-height: 48px; overflow-x: auto; padding: 12px 0; }
 .dev__formula .katex-display { margin: 0; text-align: left; }
 .dev__definition { grid-column: 1 / -1; overflow-x: auto; color: var(--ink-soft); }
 .dev__definition-line { min-height: 28px; padding: 4px 0; }
