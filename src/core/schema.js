@@ -19,7 +19,6 @@ export const STORAGE_KEYS = Object.freeze({
 export const DYNAMIC_MAX = Object.freeze({ 'gen.count': 'gen.maxSetSize' });
 
 const GENERAL_GROUP = 'general';
-const THAI_LANGUAGE_PREFIX = 'th';
 const LANGS = Object.freeze(['en', 'th']);
 const BUCKETS = Object.freeze(['easy', 'normal', 'hard', 'failed']);
 const TIER_MIN = 1;
@@ -35,20 +34,9 @@ export function groupOf(key) {
   return dot === -1 ? GENERAL_GROUP : key.slice(0, dot);
 }
 
-/**
- * Browser language guess, resolved lazily (Node-safe).
- * @returns {'en'|'th'}
- */
+/** @returns {'en'|'th'} */
 export function detectLang() {
-  try {
-    const nav = globalThis.navigator;
-    if (nav && typeof nav.language === 'string' && nav.language.toLowerCase().startsWith(THAI_LANGUAGE_PREFIX)) {
-      return 'th';
-    }
-  } catch {
-    /* ignore */
-  }
-  return 'en';
+  return 'th';
 }
 
 /**

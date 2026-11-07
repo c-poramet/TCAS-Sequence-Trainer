@@ -41,16 +41,14 @@ test('SCHEMA matches the contract table verbatim', () => {
   }
 });
 
-test('lang default is resolved lazily from navigator (Node-safe)', () => {
+test('lang defaults to Thai for new users', () => {
   const saved = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
   try {
-    Object.defineProperty(globalThis, 'navigator', { value: { language: 'th-TH' }, configurable: true });
+    Object.defineProperty(globalThis, 'navigator', { value: { language: 'en-US' }, configurable: true });
     assert.equal(getSchemaEntry('lang').default, 'th');
     assert.equal(getSetting('lang'), 'th');
-    Object.defineProperty(globalThis, 'navigator', { value: { language: 'en-US' }, configurable: true });
-    assert.equal(getSchemaEntry('lang').default, 'en');
     delete globalThis.navigator;
-    assert.equal(getSchemaEntry('lang').default, 'en');
+    assert.equal(getSchemaEntry('lang').default, 'th');
   } finally {
     if (saved) Object.defineProperty(globalThis, 'navigator', saved);
     else delete globalThis.navigator;
